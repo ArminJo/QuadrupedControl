@@ -1,0 +1,25 @@
+language: c
+sudo: false
+cache:
+  directories:
+  - ~/arduino_ide
+  - ~/.arduino15/packages/
+git:
+  depth: false
+  quiet: true
+env:
+  global:
+  - PRETTYNAME="QuadrupedControl Arduino Library"
+before_install:
+- source <(curl -SLs https://raw.githubusercontent.com/adafruit/travis-ci-arduino/master/install.sh)
+install:
+# Libraries for the QuadrupedControl example
+- arduino --install-library "ServoEasing","PinChangeInterrupt","IRLremote","Adafruit NeoPixel","NeoPatterns"
+script:
+- build_platform uno
+notifications:
+  email:
+    recipients:
+      - armin.arduino@gmail.com
+    on_success: always
+    on_failure: always

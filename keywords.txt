@@ -1,0 +1,46 @@
+#######################################
+# Syntax Coloring Map for ServoEasing
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+doCreepForward	KEYWORD2
+doCreepBack	KEYWORD2
+doTrot	KEYWORD2
+doTurnLeft	KEYWORD2
+doTurnRight	KEYWORD2
+doTwist	KEYWORD2
+doBow	KEYWORD2
+doDance	KEYWORD2
+doWave	KEYWORD2
+doTest	KEYWORD2
+doAutoMove	KEYWORD2
+doAttention	KEYWORD2
+doLeanLeft	KEYWORD2
+doLeanRight	KEYWORD2
+doLeanBack	KEYWORD2
+doLeanFront	KEYWORD2
+doCenterServos	KEYWORD2
+doCalibration	KEYWORD2
+doStop	KEYWORD2
+doSetDirectionForward	KEYWORD2
+doSetDirectionBack	KEYWORD2
+doSetDirectionRight	KEYWORD2
+doSetDirectionLeft	KEYWORD2
+doIncreaseSpeed	KEYWORD2
+doDecreaseSpeed	KEYWORD2
+doIncreaseHeight	KEYWORD2
+doDecreaseHeight	KEYWORD2
+
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+USE_KEYES_REMOTE	LITERAL1
+USE_KEYES_REMOTE_CLONE	LITERAL1
+USE_WM10_REMOTE	LITERAL1
