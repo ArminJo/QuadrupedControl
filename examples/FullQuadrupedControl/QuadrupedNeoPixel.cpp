@@ -35,9 +35,10 @@ void QuadrupedPatterns(NeoPatterns * aLedsPtr);
 
 #if defined(NUM_PIXELS)
 NeoPatterns QuadrupedNeoPixelBar = NeoPatterns(NUM_PIXELS, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800, &QuadrupedPatterns);
-NeoPatterns RightNeoPixelBar = NeoPatterns(&QuadrupedNeoPixelBar, PIXEL_OFFSET_RIGHT_BAR, 8, &QuadrupedPatterns);
-NeoPatterns FrontNeoPixelBar = NeoPatterns(&QuadrupedNeoPixelBar, PIXEL_OFFSET_FRONT_BAR, 8, &QuadrupedPatterns);
-NeoPatterns LeftNeoPixelBar = NeoPatterns(&QuadrupedNeoPixelBar, PIXEL_OFFSET_LEFT_BAR, 8, &QuadrupedPatterns);
+// false -> do not allow show on partial NeoPixel bar
+NeoPatterns RightNeoPixelBar = NeoPatterns(&QuadrupedNeoPixelBar, PIXEL_OFFSET_RIGHT_BAR, 8, &QuadrupedPatterns, false);
+NeoPatterns FrontNeoPixelBar = NeoPatterns(&QuadrupedNeoPixelBar, PIXEL_OFFSET_FRONT_BAR, 8, &QuadrupedPatterns, false);
+NeoPatterns LeftNeoPixelBar = NeoPatterns(&QuadrupedNeoPixelBar, PIXEL_OFFSET_LEFT_BAR, 8, &QuadrupedPatterns, false);
 #endif
 
 void initNeoPatterns() {
@@ -86,8 +87,7 @@ void handleServoTimerInterrupt() {
 
     bool tNeedShow = false;
     if (RightNeoPixelBar.ActivePattern != PATTERN_NONE) {
-        // Use false, since PIXEL_OFFSET_RIGHT_BAR is 0 to avoid unnecessary call of show() for the first 8 pixels.
-        tNeedShow |= RightNeoPixelBar.update(false);
+        tNeedShow |= RightNeoPixelBar.update();
     }
     if (FrontNeoPixelBar.ActivePattern != PATTERN_NONE) {
         tNeedShow |= FrontNeoPixelBar.update();
@@ -96,7 +96,7 @@ void handleServoTimerInterrupt() {
         tNeedShow |= LeftNeoPixelBar.update();
     }
     if (QuadrupedNeoPixelBar.ActivePattern != PATTERN_NONE) {
-        // One pattern for all 3 bars
+        // One pattern for all 3 bars here
         QuadrupedNeoPixelBar.update();
     } else if (tNeedShow) {
         QuadrupedNeoPixelBar.show();
@@ -121,7 +121,7 @@ void handleMovementPattern() {
                     (sMovingDirection + MOVE_DIRECTION_BACKWARD) & MOVE_DIRECTION_MASK);
         } else if (sActionType == ACTION_TYPE_TURN) {
             Serial.println(F("Starting Stripes"));
-            QuadrupedNeoPixelBar.Stripes(COLOR32_RED_HALF, 2, COLOR32_GREEN_HALF, 2, sServoSpeed, 100, 0, sMovingDirection);
+            QuadrupedNeoPixelBar.Stripes(COLOR32_RED_HALF, 2, COLOR32_GREEN_HALF, 2, sServoSpeed, 100, sMovingDirection);
         } else {
             Serial.println(F("Start nothing"));
         }
@@ -136,6 +136,5 @@ void QuadrupedPatterns(NeoPatterns * aLedsPtr) {
     Serial.print(aLedsPtr->ActivePattern);
     Serial.println(F(" finished"));
 
-    aLedsPtr->ActivePattern = PATTERN_NONE;
     handleMovementPattern();
 }

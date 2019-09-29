@@ -40,6 +40,10 @@ void __attribute__((weak)) doTest(){
     // to be overwritten by user function
 }
 
+void __attribute__((weak)) doBeep(){
+    // to be overwritten by user function
+}
+
 /*
  * Center, lean left and right lean all 4 directions and twist a random angle. Ends with a wave.
  */

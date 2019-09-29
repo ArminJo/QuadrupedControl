@@ -227,7 +227,7 @@ void doBeep() {
     tone(PIN_SPEAKER, 2000, 200);
 }
 
-// this overwrites a dummy function of the library
+// Implements the checks for this example by overwriting a dummy function of the library
 bool checkOncePerDelay() {
     return checkForLowVoltage();
 }

@@ -36,7 +36,6 @@ bool checkIRInput();
 bool delayAndCheck(uint16_t aDelayMillis);
 // These function can be overwritten by example
 bool checkOncePerDelay();
-bool checkOncePerDelay();
 
 bool checkAndCallMainCommands(uint8_t aIRCode);
 bool checkAndCallInstantCommands(uint8_t aIRCode); // function to search in MappingInstantCommands array
