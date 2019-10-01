@@ -27,9 +27,10 @@
 
 #include <Arduino.h>
 
+#include "Commands.h"
+
 #include "QuadrupedMovements.h"
 #include "QuadrupedServoControl.h"
-#include "IRCommandDispatcher.h" // for RETURN_IF_STOP
 
 #define INFO
 uint8_t sMovingDirection = MOVE_DIRECTION_FORWARD;

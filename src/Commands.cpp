@@ -30,17 +30,18 @@
 
 #include "Commands.h"
 #include "QuadrupedMovements.h"
-#include "IRCommandDispatcher.h"
 #include "QuadrupedServoControl.h"
+
+uint8_t sActionType;
 
 /******************************************
  * The Commands to execute
  ******************************************/
-void __attribute__((weak)) doTest(){
+void __attribute__((weak)) doTest() {
     // to be overwritten by user function
 }
 
-void __attribute__((weak)) doBeep(){
+void __attribute__((weak)) doBeep() {
     // to be overwritten by user function
 }
 
@@ -315,23 +316,25 @@ void __attribute__((weak)) doAutoMove() {
  * Instant Commands
  *************************/
 void __attribute__((weak)) doStop() {
+#if defined(QUADRUPED_IR_CONTROL)
     sRequestToStopReceived = true;
     sActionType = ACTION_TYPE_STOP;
+#endif
 }
 
-void doSetDirectionForward() {
+void __attribute__((weak)) doSetDirectionForward() {
     sMovingDirection = MOVE_DIRECTION_FORWARD;
 }
 
-void doSetDirectionBack() {
+void __attribute__((weak)) doSetDirectionBack() {
     sMovingDirection = MOVE_DIRECTION_BACKWARD;
 }
 
-void doSetDirectionLeft() {
+void __attribute__((weak)) doSetDirectionLeft() {
     sMovingDirection = MOVE_DIRECTION_LEFT;
 }
 
-void doSetDirectionRight() {
+void __attribute__((weak)) doSetDirectionRight() {
     sMovingDirection = MOVE_DIRECTION_RIGHT;
 }
 
@@ -369,9 +372,13 @@ void __attribute__((weak)) doIncreaseHeight() {
     if (sBodyHeightAngle > (LIFT_MIN_ANGLE + 2)) {
         sBodyHeightAngle -= 2;
         convertBodyHeightAngleToHeight();
+#if defined(QUADRUPED_IR_CONTROL)
         if (!sExecutingMainCommand) {
             setLiftServosToBodyHeight();
         }
+#else
+        setLiftServosToBodyHeight();
+#endif
     }
 }
 
@@ -379,9 +386,13 @@ void __attribute__((weak)) doDecreaseHeight() {
     if (sBodyHeightAngle < (LIFT_MAX_ANGLE - 2)) {
         sBodyHeightAngle += 2;
         convertBodyHeightAngleToHeight();
+#if defined(QUADRUPED_IR_CONTROL)
         if (!sExecutingMainCommand) {
             setLiftServosToBodyHeight();
         }
+#else
+        setLiftServosToBodyHeight();
+#endif
     }
 }
 
@@ -404,6 +415,7 @@ void signalLeg(uint8_t aPivotServoIndex) {
     sServoArray[aPivotServoIndex + LIFT_SERVO_OFFSET]->easeTo(90, 60);
 }
 
+#if defined(QUADRUPED_IR_CONTROL)
 /*
  * includes needed only for doCalibration
  */
@@ -482,3 +494,4 @@ void doCalibration() {
         delay(200);
     }
 }
+#endif

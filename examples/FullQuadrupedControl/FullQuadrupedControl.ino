@@ -1,20 +1,22 @@
 /*
- * FullQuadrupedControl.cpp
+ * QuadrupedControl.cpp
  *
- * Program for controlling a mePed Robot V2 with 8 servos, 3 NeoPixel bars and a HCSR04 US distance module.
- * The IR Remote is attached at pin A0. Supported IR remote are:
+ * Program for controlling a mePed Robot V2 with 8 servos
+ * Full version also controls IR remote receiver, 3 NeoPixel bars and a HCSR04 US distance module.
+ * The IR remote receiver is attached at pin A0. Supported IR remote controls are:
  *          KEYES (the original mePed remote)
  *          KEYES_CLONE (the one with numberpad and direction control swapped, which you get when you buy a KEYES at aliexpress).
  *          WM10
  * If you use another than the KEYES_CLONE, you have to select the one you use at line 20ff. in IRCommandMapping.h
  *
- * To run this example you need to install the "ServoEasing", "IRLremote", "PinChangeInterrupt", "NeoPatterns", "Adafruit_NeoPixel" libraries.
+ * To run this example you need to install the "ServoEasing"
+ * For full control install also "IRLremote", "PinChangeInterrupt", "NeoPatterns" and "Adafruit_NeoPixel" libraries.
  * These libraries can be installed under "Tools -> Manage Libraries..." or "Ctrl+Shift+I".
  *
  *  Copyright (C) 2019  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
- *  This file is part of ServoEasing https://github.com/ArminJo/QuadrupedControl.
+ *  This file is part of QuadrupedControl https://github.com/ArminJo/QuadrupedControl.
  *
  *  ServoEasing is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -32,15 +34,23 @@
 
 #include <Arduino.h>
 
-#include "FullQuadrupedControl.h"
-#include "QuadrupedNeoPixel.h"
+#include "QuadrupedControl.h"
 
+#if defined(QUADRUPED_HAS_NEOPIXEL)
+#include "QuadrupedNeoPixel.h"
+#endif
+
+#if defined(QUADRUPED_IR_CONTROL)
 #include "IRCommandDispatcher.h"
+#include "IRCommandMapping.h" // for IR_REMOTE_NAME
+#endif
+#if defined(QUADRUPED_HAS_US_DISTANCE)
+#include "HCSR04.h"
+#endif
+
 #include "QuadrupedServoControl.h"
 #include "QuadrupedMovements.h"
-#include "IRCommandMapping.h" // for IR_REMOTE_NAME
-
-#include "HCSR04.h"
+#include "Commands.h"
 #include "ADCUtils.h"
 
 /*
@@ -63,7 +73,7 @@
  * doLeanRight();
  * basicTwist(30);
  * doWave();
- * delayAndCheckIRInput(1000);
+ * delayAndCheck(1000);
  *
  * To move the front left lift servo use:
  * frontLeftLiftServo.easeTo(LIFT_MIN_ANGLE);
@@ -80,9 +90,12 @@
 
 /*
  * Create your own basic movement here
+ * Is mapped to the star on the remote
  */
 void doTest() {
-
+    doBeep();
+    frontLeftLiftServo.write(90);
+    backRightLiftServo.easeTo(90);
 }
 
 #define VERSION_EXAMPLE "3.0"
@@ -109,16 +122,17 @@ void setup() {
     // Just for setting channel and reference
     getVCCVoltageMillivoltSimple();
 
+#if defined(QUADRUPED_HAS_US_DISTANCE)
+    Serial.println(F("Init US distance sensor"));
     initUSDistancePins(PIN_TRIGGER_OUT, PIN_ECHO_IN);
+#endif
 
     /*
      * set servo to 90 degree WITHOUT trim and wait
      */
     resetServosTo90Degree();
 
-#if defined(PIN_SPEAKER)
     tone(PIN_SPEAKER, 2000, 300);
-#endif
     delay(2000);
 
     /*
@@ -134,13 +148,18 @@ void setup() {
     centerServos();
     convertBodyHeightAngleToHeight();
 
+#if defined(QUADRUPED_IR_CONTROL)
     setupIRDispatcher();
     Serial.print(F("Listening to IR remote of type "));
     Serial.println(IR_REMOTE_NAME);
+#endif
 
-    enableServoEasingInterrupt(); // This enables the interrupt, which synchronizes the NeoPixel update with the servo pulse generation.
-
+#if defined(QUADRUPED_HAS_NEOPIXEL)
+    Serial.println(F("Init NeoPixel"));
     initNeoPatterns();
+    enableServoEasingInterrupt(); // This enables the interrupt, which synchronizes the NeoPixel update with the servo pulse generation.
+#endif
+
 }
 
 void loop() {
@@ -149,12 +168,18 @@ void loop() {
      */
     setEasingTypeToLinear();
 
+#if defined(QUADRUPED_HAS_US_DISTANCE)
+    handleUSSensor();
+#endif
+
+#if defined(QUADRUPED_IR_CONTROL)
     /*
      * Check for IR commands and execute them.
      * Returns only AFTER finishing of requested movement
      */
     loopIRDispatcher();
 
+#if !defined(EMPTY_MAPPING)
     /*
      * Do auto move if timeout after boot was reached and no IR command was received
      */
@@ -162,6 +187,7 @@ void loop() {
         doAutoMove();
         sAtLeastOneValidIRCodeReceived = true; // do auto move only once
     }
+#endif
 
     /*
      * Get attention that no command was received since 2 minutes and quadruped may be switched off
@@ -171,10 +197,14 @@ void loop() {
         // next attention in 1 minute
         sLastTimeOfValidIRCodeReceived += MILLIS_OF_INACTIVITY_BETWEEN_REMINDER_MOVE;
     }
+#else
+    delay(5000);
+    doAutoMove();
+    delay(25000);
+#endif
 
     if (checkForLowVoltage()) {
         shutdownServos();
-#if defined(PIN_SPEAKER)
         tone(PIN_SPEAKER, 2000, 200);
         delay(400);
         tone(PIN_SPEAKER, 1400, 300);
@@ -182,24 +212,7 @@ void loop() {
         tone(PIN_SPEAKER, 1000, 400);
         delay(800);
         tone(PIN_SPEAKER, 700, 500);
-#endif
         delay(10000);  // wait for next check
-    }
-
-//    handleUSSensor();
-
-}
-
-/*
- * Get front distance
- */
-void handleUSSensor() {
-    static uint16_t sLastDistance;
-    uint16_t tDistance = getUSDistanceAsCentiMeter();
-    if (tDistance != sLastDistance) {
-        Serial.print(F("Distance="));
-        Serial.print(tDistance);
-        Serial.println(F("cm"));
     }
 }
 
@@ -221,14 +234,51 @@ bool checkForLowVoltage() {
     return true;
 }
 
+#if defined(QUADRUPED_HAS_US_DISTANCE)
+/*
+ * Get front distance
+ */
+void handleUSSensor() {
+    static uint16_t sLastDistance;
+    uint16_t tDistance = getUSDistanceAsCentiMeter();
+    if (tDistance != sLastDistance) {
+        Serial.print(F("Distance="));
+        Serial.print(tDistance);
+        Serial.println(F("cm"));
+    }
+}
+#endif
+
 void doBeep() {
     tone(PIN_SPEAKER, 2000, 200);
     delayAndCheck(400);
     tone(PIN_SPEAKER, 2000, 200);
 }
 
-// Implements the checks for this example by overwriting a dummy function of the library
-bool checkOncePerDelay() {
-    return checkForLowVoltage();
-}
+/*
+ * Special delay function for the quadruped control.
+ * It checks for low voltage, IR input and US distance sensor
+ * @return  true - if exit condition occurred like stop received
+ */
+bool delayAndCheck(uint16_t aDelayMillis) {
+    uint32_t tStartMillis = millis();
 
+    // check only once per delay
+    if (!checkForLowVoltage()) {
+        do {
+#if defined(QUADRUPED_IR_CONTROL)
+            if (checkIRInput()) {
+                Serial.println(F("IR stop received -> exit from delayAndCheck"));
+                sActionType = ACTION_TYPE_STOP;
+                return true;
+            }
+#endif
+            yield();
+        } while (millis() - tStartMillis < aDelayMillis);
+        return false;
+    }
+#if defined(QUADRUPED_IR_CONTROL)
+    sActionType = ACTION_TYPE_STOP;
+#endif
+    return true;
+}

@@ -5,8 +5,8 @@
  *      Author: Armin
  */
 
-#ifndef SRC_QUADRUPEDSERVOCONFIGURATION_H_
-#define SRC_QUADRUPEDSERVOCONFIGURATION_H_
+#ifndef QUADRUPEDSERVOCONFIGURATION_H_
+#define QUADRUPEDSERVOCONFIGURATION_H_
 
 // some useful constants
 #define LIFT_MAX_ANGLE 135  // upper mechanical limit -> body is low
@@ -18,11 +18,6 @@
 #define MOVE_DIRECTION_RIGHT    0x03
 #define MOVE_DIRECTION_MASK     0x03
 #define MOVE_DIRECTION_SIDE_MASK    0x01
-
-#define ACTION_TYPE_CREEP   1
-#define ACTION_TYPE_TROT    2
-#define ACTION_TYPE_TURN    3
-#define ACTION_TYPE_TWIST   4
 
 /*
  * Specification for basic creep
@@ -71,6 +66,6 @@
 #define FRONT_RIGHT_LEG (FRONT_RIGHT_PIVOT / SERVOS_PER_LEG)
 #define FRONT_RIGHT_LIFT 7
 
-#endif /* SRC_QUADRUPEDSERVOCONFIGURATION_H_ */
+#endif /* QUADRUPEDSERVOCONFIGURATION_H_ */
 
 #pragma once

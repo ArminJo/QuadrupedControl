@@ -33,10 +33,7 @@
 
 #include "QuadrupedServoConfiguration.h"
 #include "QuadrupedServoControl.h"
-#include "IRCommandDispatcher.h" // for delayAndCheck()
-
-
-//#include "IRCommandDispatcher.h" // for checkIRInput(); and RETURN_IF_STOP;
+#include "QuadrupedControl.h"
 
 // Define 8 servos in exact this order!
 ServoEasing frontLeftPivotServo;    // 0 - Front Left Pivot Servo
