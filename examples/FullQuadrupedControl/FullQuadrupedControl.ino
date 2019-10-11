@@ -44,8 +44,13 @@
 #include "IRCommandDispatcher.h"
 #include "IRCommandMapping.h" // for IR_REMOTE_NAME
 #endif
+
 #if defined(QUADRUPED_HAS_US_DISTANCE)
 #include "HCSR04.h"
+#endif
+
+#if defined(QUADRUPED_PLAYS_RTTTL)
+#include <PlayRtttl.h>
 #endif
 
 #include "QuadrupedServoControl.h"
@@ -53,6 +58,12 @@
 #include "Commands.h"
 #include "ADCUtils.h"
 
+
+#if defined(QUADRUPED_HAS_NEOPIXEL)
+color32_t sBarBackgroundColorArray[PIXELS_ON_ONE_BAR] = { COLOR32_RED_QUARTER, COLOR32_RED_QUARTER, COLOR32_RED_QUARTER,
+COLOR32_YELLOW, COLOR32_YELLOW,
+COLOR32_GREEN_QUARTER, COLOR32_GREEN_QUARTER, COLOR32_GREEN_QUARTER };
+#endif
 /*
  * The auto move function. Put your own moves here.
  *
@@ -61,6 +72,8 @@
  *  backLeftPivotServo, backLeftLiftServo
  *  backRightPivotServo, backRightLiftServo
  *  frontRightPivotServo, frontRightLiftServo
+ *
+ * sBodyHeightAngle contains the normal angle of lift servos.
  *
  * Useful commands:
  *
@@ -76,8 +89,12 @@
  * delayAndCheck(1000);
  *
  * To move the front left lift servo use:
- * frontLeftLiftServo.easeTo(LIFT_MIN_ANGLE);
- * setLiftServos(LIFT_MIN_ANGLE, LIFT_MAX_ANGLE, LIFT_MAX_ANGLE, LIFT_MAX_ANGLE);
+ * frontLeftLiftServo.easeTo(LIFT_LOWEST_ANGLE);
+ *
+ * To move all lift servos simultaneously:
+ * setLiftServos(LIFT_LOWEST_ANGLE, LIFT_HIGHEST_ANGLE, LIFT_HIGHEST_ANGLE, LIFT_HIGHEST_ANGLE);
+ *
+ * To move all pivot servos simultaneously:
  * setPivotServos(100, 100, 80, 80);
  */
 
@@ -87,15 +104,22 @@
 //void doAutoMove() {
 //    return;
 //}
-
 /*
  * Create your own basic movement here
  * Is mapped to the star on the remote
  */
 void doTest() {
     doBeep();
-    frontLeftLiftServo.write(90);
-    backRightLiftServo.easeTo(90);
+
+#if defined(QUADRUPED_HAS_NEOPIXEL)
+    QuadrupedNeoPixelBar.clear();
+    LeftNeoPixelBar.ScannerExtended(COLOR32_CYAN, 3, sServoSpeed / 2, 0, FLAG_SCANNER_EXT_ROCKET | FLAG_SCANNER_EXT_VANISH_COMPLETE,
+    DIRECTION_DOWN);
+#endif
+
+    frontLeftLiftServo.easeTo(LIFT_HIGHEST_ANGLE);
+    frontLeftPivotServo.easeTo(25);
+    frontLeftLiftServo.easeTo(sBodyHeightAngle);
 }
 
 #define VERSION_EXAMPLE "3.0"
@@ -104,9 +128,6 @@ void doTest() {
 // 2.0 major refactoring
 // 1.1 mirror computation at transformAndSetPivotServos and transformOneServoIndex
 
-/*
- * Code starts here
- */
 void setup() {
     // initialize the digital pin as an output.
     pinMode(LED_BUILTIN, OUTPUT);
@@ -132,14 +153,19 @@ void setup() {
      */
     resetServosTo90Degree();
 
-    tone(PIN_SPEAKER, 2000, 300);
-    delay(2000);
-
     /*
      * set servo to 90 degree with trim and wait
      */
     eepromReadAndSetServoTrim();
     resetServosTo90Degree();
+
+    delay(500); // Otherwise it starts to play after reset and is then interrupted
+#if defined(QUADRUPED_PLAYS_RTTTL)
+    playRtttlBlockingPGM(PIN_SPEAKER, Short);
+#else
+    tone(PIN_SPEAKER, 2000, 300);
+#endif
+
     delay(2000);
 
     /*
@@ -178,16 +204,25 @@ void loop() {
      * Returns only AFTER finishing of requested movement
      */
     loopIRDispatcher();
+#if defined(QUADRUPED_HAS_NEOPIXEL)
+    if (sJustCalledMainCommand) {
+        sJustCalledMainCommand = false;
+        sStartOrChangeNeoPatterns = true;
+    }
+#endif
 
-#if !defined(EMPTY_MAPPING)
     /*
      * Do auto move if timeout after boot was reached and no IR command was received
      */
     if (!sAtLeastOneValidIRCodeReceived && (millis() > MILLIS_OF_INACTIVITY_BEFORE_SWITCH_TO_AUTO_MOVE)) {
+#if defined(QUADRUPED_HAS_NEOPIXEL)
+        clearPatternsSlowlyBlocking();
+#endif
+#if !defined(EMPTY_MAPPING)
         doAutoMove();
+#endif
         sAtLeastOneValidIRCodeReceived = true; // do auto move only once
     }
-#endif
 
     /*
      * Get attention that no command was received since 2 minutes and quadruped may be switched off
@@ -198,9 +233,9 @@ void loop() {
         sLastTimeOfValidIRCodeReceived += MILLIS_OF_INACTIVITY_BETWEEN_REMINDER_MOVE;
     }
 #else
-    delay(5000);
+    delayAndCheck(5000);
     doAutoMove();
-    delay(25000);
+    delayAndCheck(25000);
 #endif
 
     if (checkForLowVoltage()) {
@@ -212,7 +247,10 @@ void loop() {
         tone(PIN_SPEAKER, 1000, 400);
         delay(800);
         tone(PIN_SPEAKER, 700, 500);
-        delay(10000);  // wait for next check
+#if defined(QUADRUPED_HAS_NEOPIXEL)
+        clearPatternsSlowlyBlocking();
+#endif
+        delay(10000);  // blocking wait for next check
     }
 }
 
@@ -239,12 +277,38 @@ bool checkForLowVoltage() {
  * Get front distance
  */
 void handleUSSensor() {
+    static uint32_t sLastMeasurementMillis;
     static uint16_t sLastDistance;
-    uint16_t tDistance = getUSDistanceAsCentiMeter();
-    if (tDistance != sLastDistance) {
-        Serial.print(F("Distance="));
-        Serial.print(tDistance);
-        Serial.println(F("cm"));
+    if (millis() - sLastMeasurementMillis > MILLIS_BETWEEN_MEASUREMENTS) {
+        sLastMeasurementMillis = millis();
+        uint16_t tDistance = getUSDistanceAsCentiMeter();
+        if (sLastDistance != tDistance) {
+            sLastDistance = tDistance;
+            Serial.print(F("Distance="));
+            Serial.print(tDistance);
+            Serial.println(F("cm"));
+
+#if defined(QUADRUPED_HAS_NEOPIXEL)
+            // Show bar if no other pattern is active
+            if (FrontNeoPixelBar.ActivePattern == PATTERN_NONE) {
+                /*
+                 * The first 6 pixel represent a distance of each 5 cm
+                 * The 7. pixel is active if distance is > 50 centimeter
+                 * The 8. pixel is active if distance is > 1 meter
+                 */
+                uint8_t tBarLength;
+                if (tDistance > 100) {
+                    tBarLength = 8;
+                } else if (tDistance > 50) {
+                    tBarLength = 7;
+                } else {
+                    tBarLength = tDistance / 5;
+                }
+                FrontNeoPixelBar.drawBarFromColorArray(tBarLength, sBarBackgroundColorArray);
+                showPatternSynchronized();
+            }
+#endif
+        }
     }
 }
 #endif
@@ -263,7 +327,7 @@ void doBeep() {
 bool delayAndCheck(uint16_t aDelayMillis) {
     uint32_t tStartMillis = millis();
 
-    // check only once per delay
+// check only once per delay
     if (!checkForLowVoltage()) {
         do {
 #if defined(QUADRUPED_IR_CONTROL)

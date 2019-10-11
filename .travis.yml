@@ -14,7 +14,7 @@ before_install:
 - source <(curl -SLs https://raw.githubusercontent.com/adafruit/travis-ci-arduino/master/install.sh)
 install:
 # Libraries for the QuadrupedControl example
-- arduino --install-library "ServoEasing","PinChangeInterrupt","IRLremote","Adafruit NeoPixel","NeoPatterns"
+- arduino --install-library "ServoEasing","PinChangeInterrupt","IRLremote","Adafruit NeoPixel","NeoPatterns","PlayRtttl"
 script:
 - build_platform uno
 notifications:

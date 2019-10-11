@@ -268,16 +268,16 @@ COMMAND_BACKWARD, &doSetDirectionBack, dirBack }, { COMMAND_RIGHT, &doSetDirecti
         &doDecreaseHeight, fastBack }, { COMMAND_STOP, &doStop, stop } };
 #else
 // empty mapping
- const struct IRToCommandMapping IRMapping[] = {
- {COMMAND_RIGHT, &doTest, myMove }, { COMMAND_LEFT, &doTest, myMove }, { COMMAND_CENTER, &doCenterServos, center },
- { COMMAND_FORWARD, &doBeep, beep }, { COMMAND_BACKWARD, &doBeep, beep },
- {COMMAND_CALIBRATE, &doBeep, beep }, { COMMAND_DANCE, &doBeep, beep }, { COMMAND_TWIST, &doBeep, beep },
- {COMMAND_WAVE, &doBeep, beep }, { COMMAND_TROT, &doBeep, beep }, { COMMAND_AUTO, &doBeep, beep } };
+const struct IRToCommandMapping IRMapping[] = { { COMMAND_RIGHT, &doTest, myMove }, { COMMAND_LEFT, &doTest, myMove }, {
+COMMAND_CENTER, &doCenterServos, center }, { COMMAND_FORWARD, &doBeep, beep }, { COMMAND_BACKWARD, &doBeep, beep }, {
+COMMAND_CALIBRATE, &doBeep, beep }, { COMMAND_DANCE, &doBeep, beep }, { COMMAND_TWIST, &doBeep, beep }, {
+COMMAND_WAVE, &doBeep, beep }, { COMMAND_TROT, &doBeep, beep }, { COMMAND_AUTO, &doBeep, beep }, { COMMAND_TEST, &doTest, test } };
 
- const struct IRToCommandMapping IRMappingInstantCommands[] = { { COMMAND_FORWARD, &doBeep, beep },
- {COMMAND_BACKWARD, &doBeep, beep }, { COMMAND_RIGHT, &doBeep, beep }, { COMMAND_LEFT, &doBeep, beep },
- { COMMAND_INCREASE_SPEED, &doBeep, beep }, { COMMAND_DECREASE_SPEED, &doBeep, beep },
- { COMMAND_INCREASE_HEIGHT, &doBeep, beep }, { COMMAND_DECREASE_HEIGHT, &doBeep, beep }, { COMMAND_STOP, &doBeep, beep } };
+const struct IRToCommandMapping IRMappingInstantCommands[] = { { COMMAND_FORWARD, &doBeep, beep }, {
+COMMAND_BACKWARD, &doBeep, beep }, { COMMAND_RIGHT, &doBeep, beep }, { COMMAND_LEFT, &doBeep, beep }, {
+COMMAND_INCREASE_SPEED, &doBeep, beep }, { COMMAND_DECREASE_SPEED, &doBeep, beep }, { COMMAND_INCREASE_HEIGHT, &doBeep, beep }, {
+COMMAND_DECREASE_HEIGHT, &doBeep, beep }, { COMMAND_STOP, &doBeep, beep } };
+
 #endif // EMPTY_MAPPING
 #endif /* IR_COMMAND_MAPING_H_ */
 
