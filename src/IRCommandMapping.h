@@ -258,7 +258,7 @@ struct IRToCommandMapping {
 const struct IRToCommandMapping IRMapping[] = { { COMMAND_RIGHT, &doTurnRight, right }, { COMMAND_LEFT, &doTurnLeft, left }, {
 COMMAND_CENTER, &doCenterServos, center }, { COMMAND_FORWARD, &doCreepForward, forward }, { COMMAND_BACKWARD, &doCreepBack, back },
         { COMMAND_CALIBRATE, &doCalibration, mute }, { COMMAND_DANCE, &doDance, dance }, { COMMAND_TWIST, &doTwist, twist }, {
-        COMMAND_WAVE, &doWave, wave }, { COMMAND_TROT, &doTrot, trot }, { COMMAND_AUTO, &doAutoMove, autoMove }, { COMMAND_TEST,
+        COMMAND_WAVE, &doWave, wave }, { COMMAND_TROT, &doTrot, trot }, { COMMAND_AUTO, &doQuadrupedAutoMove, autoMove }, { COMMAND_TEST,
                 &doTest, test } };
 
 const struct IRToCommandMapping IRMappingInstantCommands[] = { { COMMAND_FORWARD, &doSetDirectionForward, dirForward }, {

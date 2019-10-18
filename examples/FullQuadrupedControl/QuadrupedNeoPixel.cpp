@@ -56,18 +56,23 @@ NeoPatterns LeftNeoPixelBar = NeoPatterns(&QuadrupedNeoPixelBar, PIXEL_OFFSET_LE
         false);
 #endif
 
+uint16_t getDelayFromSpeed() {
+    return 800 / sServoSpeed;
+}
+
 void initNeoPatterns() {
     QuadrupedNeoPixelBar.begin(); // This sets the output pin.
-    RightNeoPixelBar.ColorWipe(COLOR32_GREEN_QUARTER, sServoSpeed);
-    FrontNeoPixelBar.ScannerExtended(COLOR32_BLUE_HALF, 2, sServoSpeed, 2,
+    uint16_t tDelay = getDelayFromSpeed();
+    RightNeoPixelBar.ColorWipe(COLOR32_GREEN_QUARTER, tDelay);
+    FrontNeoPixelBar.ScannerExtended(COLOR32_BLUE_HALF, 2, tDelay, 2,
     FLAG_SCANNER_EXT_ROCKET | FLAG_SCANNER_EXT_START_AT_BOTH_ENDS);
-    LeftNeoPixelBar.ColorWipe(COLOR32_RED_QUARTER, sServoSpeed, 0, DIRECTION_DOWN);
+    LeftNeoPixelBar.ColorWipe(COLOR32_RED_QUARTER, tDelay, 0, DIRECTION_DOWN);
 }
 
 void clearPatternsSlowly() {
-    RightNeoPixelBar.ColorWipe(COLOR32_BLACK, sServoSpeed, FLAG_DO_NOT_CLEAR, DIRECTION_DOWN);
+    RightNeoPixelBar.ColorWipe(COLOR32_BLACK, getDelayFromSpeed(), FLAG_DO_NOT_CLEAR, DIRECTION_DOWN);
     FrontNeoPixelBar.clear();
-    LeftNeoPixelBar.ColorWipe(COLOR32_BLACK, sServoSpeed, FLAG_DO_NOT_CLEAR);
+    LeftNeoPixelBar.ColorWipe(COLOR32_BLACK, getDelayFromSpeed(), FLAG_DO_NOT_CLEAR);
 }
 
 void clearPatternsSlowlyBlocking() {
@@ -177,18 +182,25 @@ void handleMovementPattern() {
         switch (sActionType) {
         case ACTION_TYPE_CREEP:
             Serial.println(F("Starting ColorWipe"));
-            RightNeoPixelBar.ColorWipe(Adafruit_NeoPixel::Color(0, NeoPixel::gamma5(sBodyHeight), 0), sServoSpeed * 4, 0,
+            RightNeoPixelBar.ColorWipe(Adafruit_NeoPixel::Color(0, NeoPixel::gamma5(sBodyHeight), 0), getDelayFromSpeed(), 0,
                     sMovingDirection);
-            LeftNeoPixelBar.ColorWipe(Adafruit_NeoPixel::Color(NeoPixel::gamma5(sBodyHeight), 0, 0), sServoSpeed * 4, 0,
+            LeftNeoPixelBar.ColorWipe(Adafruit_NeoPixel::Color(NeoPixel::gamma5(sBodyHeight), 0, 0), getDelayFromSpeed(), 0,
                     (sMovingDirection + MOVE_DIRECTION_BACKWARD) & MOVE_DIRECTION_MASK);
             break;
         case ACTION_TYPE_TURN:
             Serial.println(F("Starting Stripes"));
-            QuadrupedNeoPixelBar.Stripes(COLOR32_RED_HALF, 2, COLOR32_GREEN_HALF, 2, sServoSpeed, 100, sMovingDirection);
+            QuadrupedNeoPixelBar.Stripes(COLOR32_RED_HALF, 2, COLOR32_GREEN_HALF, 2, getDelayFromSpeed(), 100, sMovingDirection);
             break;
         case ACTION_TYPE_TWIST:
             Serial.println(F("Starting Stripes"));
-            QuadrupedNeoPixelBar.Stripes(COLOR32_RED_HALF, 2, COLOR32_GREEN_HALF, 2, sServoSpeed, 100, sMovingDirection);
+            QuadrupedNeoPixelBar.Stripes(COLOR32_RED_HALF, 2, COLOR32_GREEN_HALF, 2, getDelayFromSpeed(), 100, sMovingDirection);
+            break;
+        case ACTION_TYPE_TROT:
+            Serial.println(F("Starting Rockets"));
+            RightNeoPixelBar.ScannerExtended(Adafruit_NeoPixel::Color(0, NeoPixel::gamma5(sBodyHeight), 0), 3, getDelayFromSpeed(),
+                    0, FLAG_SCANNER_EXT_ROCKET, sMovingDirection);
+            LeftNeoPixelBar.ScannerExtended(Adafruit_NeoPixel::Color(NeoPixel::gamma5(sBodyHeight), 0, 0), 3, getDelayFromSpeed(),
+                    0, FLAG_SCANNER_EXT_ROCKET, (sMovingDirection + MOVE_DIRECTION_BACKWARD) & MOVE_DIRECTION_MASK);
             break;
         default:
             Serial.println(F("One show only"));
