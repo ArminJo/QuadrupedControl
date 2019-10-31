@@ -19,18 +19,21 @@
 #define PIXEL_OFFSET_FRONT_BAR PIXELS_ON_ONE_BAR
 #define PIXEL_OFFSET_LEFT_BAR (2*PIXELS_ON_ONE_BAR)
 
+void doPattern1();
+
 void initNeoPatterns();
-void clearPatternsSlowly();
-void clearPatternsSlowlyBlocking();
+void wipeOutPatterns();
+void wipeOutPatternsBlocking();
 
 bool isAtLeastOnePatternActive();
 
-void triggerNeoPatterns();
 void showPatternSynchronized();
 
-void handleMovementPattern();
+void handleAutomaticMovementPattern();
 bool handleQuadrupedNeoPixelUpdate();
 void handleServoTimerInterrupt();
+
+uint16_t getDelayFromSpeed();
 
 extern NeoPatterns QuadrupedNeoPixelBar; // The main 24 pixel bar containing all the other 3 logical NeoPatterns objects.
 extern NeoPatterns RightNeoPixelBar;     // 8 Pixel bar at the right

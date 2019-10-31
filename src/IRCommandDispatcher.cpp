@@ -36,74 +36,74 @@
 
 #include "IRCommandMapping.h"
 
+//#define INFO // comment this out to see serial info output
+//#define WARN // comment this out to see serial info output
+#ifdef INFO
+#define WARN
+#endif
+
 #if (IR_CONTROL_CODING == 'P')
 CPanasonic IRLremote;
 #else
 CNec IRLremote;
 #endif
 
-bool sJustCalledMainCommand;
-bool sExecutingMainCommand;             // set if we just execute a command by dispatcher
+bool sJustCalledExclusiveIRCommand = false;
+bool sExecutingExclusiveCommand = false;        // set if we just execute a command by dispatcher
+uint8_t sRejectedExclusiveCommand = COMMAND_INVALID; // Storage for rejected command to allow the actual command to end, before it is called by main loop.
+uint8_t sCurrentCommandCalled = COMMAND_INVALID; // The code for the current called command
 bool sCurrentCommandIsRepeat;
 bool sAtLeastOneValidIRCodeReceived = false; // one time flag. Set if we received a valid IR code. Used for breaking timeout for auto move.
-uint32_t sLastTimeOfValidIRCodeReceived; // millis of last IR command
+uint32_t sLastTimeOfIRCodeReceived; // millis of last IR command
 /*
- * Flag for movements to stop, set by checkIRInput().
+ * Flag for movements to stop, set by checkIRInputForNonExclusiveCommand().
  * It works like an exception so we do not need to propagate the return value from the delay up to the movements.
  * Instead we can use "if (sRequestToStopReceived) return;" (available as macro RETURN_IF_STOP).
  */
 bool sRequestToStopReceived;
 
-// internally used
-uint8_t sCurrentIRCode;                // to decide if we have a repetition of non instant commands. Not needed for NEC remotes.
-uint8_t sNextCommand = COMMAND_EMPTY; // Next command for main loop, set by checkIRInput(). If != 0 do not wait for next IR command just take this command.
-
 void setupIRDispatcher() {
 
     // Start reading the remote. PinInterrupt or PinChangeInterrupt* will automatically be selected
     if (!IRLremote.begin(IR_RECEIVER_PIN)) {
+#ifdef INFO
         Serial.println(F("You did not choose a valid pin"));
+#endif
     }
 }
 
-/**
- * @return true if valid main or instant command received
+/*
+ * Handling of sRequestToStopReceived
+ * @return see checkAndCallCommand()
  */
-bool loopIRDispatcher() {
-    uint8_t tIRCode;
+bool loopIRDispatcher(bool takeRejectedCommand) {
 
     // here we are stopped, so lets start a new turn
     sRequestToStopReceived = false;
 
     /*
-     * Handle sNextCommand received while waiting for a movement to end
+     * search IR code or take last rejected command and call associated function
      */
-    if (sNextCommand == COMMAND_EMPTY) {
-        tIRCode = getIRCommand(false);
+    uint8_t tIRCode;
+    if (takeRejectedCommand && (sRejectedExclusiveCommand != COMMAND_INVALID)) {
+#ifdef INFO
+        Serial.print(F("Take rejected command = 0x"));
+        Serial.println(sRejectedExclusiveCommand, HEX);
+#endif
+        tIRCode = sRejectedExclusiveCommand;
+        sRejectedExclusiveCommand = COMMAND_INVALID;
     } else {
-        tIRCode = sNextCommand;
-        sNextCommand = COMMAND_EMPTY;
+        tIRCode = getIRCommand(false);
     }
-
-    /*
-     * search IR code and call associated function
-     */
-    if (tIRCode != COMMAND_EMPTY) {
-        if (checkAndCallMainCommands(tIRCode)) {
-            return true;
-        } else {
-            // must be after checkAndCallMainCommands
-            return checkAndCallInstantCommands(tIRCode);
-        }
-    }
-    return false;
+    return checkAndCallCommand(tIRCode);
 }
 
 /*
- * Wait for next IR command
+ * Does repeat detection and sets sCurrentCommandIsRepeat accordingly
+ * Wait for next IR command, and return last IR code (instead of repeat code) if repeat detected.
  */
 uint8_t getIRCommand(bool doWait) {
-    static uint8_t sLastIRValue = 0;
+    static uint8_t sLastIRValue = COMMAND_EMPTY; // for repeat detection
 //    static uint16_t sReferenceAddress = 0; // store first received address here for better IR-receive error handling
 
     uint8_t tIRReturnValue = COMMAND_EMPTY;
@@ -113,23 +113,32 @@ uint8_t getIRCommand(bool doWait) {
             // Get the new data from the remote
             auto tIRData = IRLremote.read();
 
-            if (tIRData.address == IR_REPEAT_ADDRESS && tIRData.command == IR_REPEAT_CODE) {
+            if ((tIRData.address == IR_REPEAT_ADDRESS && tIRData.command == IR_REPEAT_CODE)
+                    || (sLastIRValue == tIRData.command && sLastTimeOfIRCodeReceived > millis() - IR_REPEAT_TIMEOUT_MS)) {
+                sLastTimeOfIRCodeReceived = millis();
+
                 /*
-                 * Handle repeat code
+                 * Handle repeat(ed) code
                  */
+#ifdef INFO
                 Serial.println(F("Repeat received"));
+#endif
                 if (sLastIRValue != COMMAND_EMPTY) {
                     sCurrentCommandIsRepeat = true;
                     tIRReturnValue = sLastIRValue;
                 }
             } else {
+                sLastTimeOfIRCodeReceived = millis();
+
                 /*
                  * Regular code here
                  */
+#ifdef INFO
                 Serial.print(F("A=0x"));
                 Serial.print(tIRData.address, HEX);
                 Serial.print(F(" C=0x"));
                 Serial.print(tIRData.command, HEX);
+#endif
 
                 tIRReturnValue = tIRData.command;
 //              if (sReferenceAddress == 0) {
@@ -140,10 +149,14 @@ uint8_t getIRCommand(bool doWait) {
                     // Received new code (with right address)
                     sCurrentCommandIsRepeat = false;
                     sLastIRValue = tIRReturnValue;
+#ifdef INFO
                     Serial.println();
+#endif
                     break;
                 } else {
+#ifdef INFO
                     Serial.println(F(" Unknown"));
+#endif
                     // unknown code - maybe here, because other interrupts interfere with the IR Interrupt
                     // Disable repeat in order not to repeat the wrong command
                     sLastIRValue = COMMAND_EMPTY;
@@ -156,89 +169,94 @@ uint8_t getIRCommand(bool doWait) {
 }
 
 /*
- * @return  true if main command found.
- * @note    Main command are commands which can only be executed if no movement happens.
+ * Return values of checkAndCallCommand
  */
-bool checkAndCallMainCommands(uint8_t aIRCode) {
+#define CALLED 0
+#define IR_CODE_EMPTY 1
+#define NOT_CALLED_MASK 0x02
+#define FOUND_BUT_EXCLUSIVE_LOCK 2
+#define FOUND_BUT_REPEAT_NOT_ACCEPTED 3
+#define NOT_FOUND_MASK 0x04
+#define IR_CODE_NOT_FOUND 4
+/*
+ * Sets sJustCalledExclusiveIRCommand, sExecutingExclusiveCommand
+ */
+uint8_t checkAndCallCommand(uint8_t aIRCode) {
+    if (aIRCode == COMMAND_EMPTY) {
+        return IR_CODE_EMPTY;
+    }
+
     for (uint8_t i = 0; i < sizeof(IRMapping) / sizeof(struct IRToCommandMapping); ++i) {
         if (aIRCode == IRMapping[i].IRCode) {
-            sCurrentIRCode = aIRCode;
 
-            Serial.print(F("Calling "));
+#ifdef INFO
+            Serial.print(F("Found command "));
             Serial.println(reinterpret_cast<const __FlashStringHelper *>(IRMapping[i].CommandString));
+#endif
 
-            sLastTimeOfValidIRCodeReceived = millis();
             // one time flag used for breaking timeout for auto move.
             sAtLeastOneValidIRCodeReceived = true;
 
             /*
-             * Call the function specified in IR mapping
+             * Check for repeat and call the function specified in IR mapping
              */
-            sJustCalledMainCommand = true;
-            sExecutingMainCommand = true;
-            IRMapping[i].CommandToCall(); // Blocking call. Will only return after the move is finished.
-            sExecutingMainCommand = false;
-            return true;
-        }
-    }
-    return false;
-}
-/*
- * @return  true if instant command found.
- * @note    Instant command are commands which can be executed at each time in movement.
- */
-bool checkAndCallInstantCommands(uint8_t aIRCode) {
-// search IR code and call associated function
-    for (uint8_t i = 0; i < sizeof(IRMappingInstantCommands) / sizeof(struct IRToCommandMapping); ++i) {
-        if (aIRCode == IRMappingInstantCommands[i].IRCode) {
-
-            Serial.print(F("Calling "));
-            Serial.print(reinterpret_cast<const __FlashStringHelper *>(IRMappingInstantCommands[i].CommandString));
-
-            sLastTimeOfValidIRCodeReceived = millis();
-            // one time flag used for breaking timeout for auto move.
-            sAtLeastOneValidIRCodeReceived = true;
+            if (sCurrentCommandIsRepeat && !(IRMapping[i].Flags & IR_COMMAND_FLAG_ACCEPT_REPEAT)) {
+                return FOUND_BUT_REPEAT_NOT_ACCEPTED;
+            }
 
             /*
-             * Call the instant function specified in IR mapping
-             * The command can print in the same line
+             * Do not accept recursive call of the same command
              */
-            Serial.print(' ');
-            IRMappingInstantCommands[i].CommandToCall();
-            Serial.println();
-            return true;
+            if (sCurrentCommandCalled == aIRCode) {
+#ifdef WARN
+                Serial.print(F("Recursive command 0x"));
+                Serial.print(sRejectedExclusiveCommand, HEX);
+                Serial.println(" not accepted");
+#endif
+                return FOUND_BUT_REPEAT_NOT_ACCEPTED;
+            }
+
+            bool tIsExclusiveCommand = !(IRMapping[i].Flags & IR_COMMAND_FLAG_NOT_EXCLUSIVE);
+            if (tIsExclusiveCommand) {
+                if (sExecutingExclusiveCommand) {
+                    sRejectedExclusiveCommand = aIRCode;
+                    return FOUND_BUT_EXCLUSIVE_LOCK;
+                }
+                /*
+                 * Cannot store just flags, since they may be overwritten by a recursive call from the blocking command execution below.
+                 */
+                sJustCalledExclusiveIRCommand = true;
+                sExecutingExclusiveCommand = true;
+            }
+            sCurrentCommandCalled = aIRCode;
+            IRMapping[i].CommandToCall(); // This call may be blocking!!!
+            sExecutingExclusiveCommand = false;
+            sCurrentCommandCalled = COMMAND_INVALID;
+            return CALLED;
         }
     }
-    return false;
+    return IR_CODE_NOT_FOUND;
 }
 
 /*
- * Suppress repeated IR non instant commands
- * Sets sRequestToStopReceived if stop received
- * @return  true - if IR command stop received
- *
+ * @return  true (and sets sRequestToStopReceived)  - if invalid IR command received
  */
-bool checkIRInput() {
-    uint8_t tIRCode = getIRCommand(false);
-    if (tIRCode == COMMAND_EMPTY) {
-        return false;
-    } else if (tIRCode == sCurrentIRCode) {
-        // suppress repeated main (non instant) command
-        return false;
-    } else if (checkAndCallInstantCommands(tIRCode)) {
-        return false;
-    } else {
-        sNextCommand = tIRCode;
+bool checkIRInputForNonExclusiveCommand() {
+
+    uint8_t tCheckResult = checkAndCallCommand(getIRCommand(false));
+    if ((tCheckResult & NOT_FOUND_MASK) || (tCheckResult == FOUND_BUT_EXCLUSIVE_LOCK)) {
+        /*
+         * IR command not found in mapping or another exclusive command -> request stop
+         */
         sRequestToStopReceived = true; // return to loop
-
-        sLastTimeOfValidIRCodeReceived = millis();
-        // one time flag
-        sAtLeastOneValidIRCodeReceived = true;
         return true;
     }
+// Command found in mapping
+    return false;
 }
 
 void printIRCommandString(uint8_t aIRCode) {
+#ifdef INFO
     Serial.print(F("IRCommand="));
     for (uint8_t i = 0; i < sizeof(IRMapping) / sizeof(struct IRToCommandMapping); ++i) {
         if (aIRCode == IRMapping[i].IRCode) {
@@ -247,6 +265,6 @@ void printIRCommandString(uint8_t aIRCode) {
         }
     }
     Serial.println(reinterpret_cast<const __FlashStringHelper *>(unknown));
+#endif
 }
-
 

@@ -19,7 +19,8 @@
 //#define USE_KEYES_REMOTE_CLONE With number pad and direction control switched, will be taken as default
 //#define USE_KEYES_REMOTE // The mePed 2 Standard remote
 //#define USE_WM10_REMOTE
-#if !defined(USE_KEYES_REMOTE) && !defined(USE_WM10_REMOTE) && !defined(USE_KEYES_REMOTE_CLONE)
+//#define USE_BLACK_DVD_REMOTE
+#if !defined(USE_KEYES_REMOTE) && !defined(USE_WM10_REMOTE) && !defined(USE_KEYES_REMOTE_CLONE) && !defined(USE_BLACK_DVD_REMOTE)
 #define USE_KEYES_REMOTE_CLONE // the one you can buy at aliexpress
 #endif
 
@@ -58,7 +59,6 @@
  * SECOND:
  * IR button to command mapping for better reading. IR buttons should only referenced here.
  */
-#define COMMAND_EMPTY       0 // no command received
 #define COMMAND_FORWARD     IR_UP
 #define COMMAND_BACKWARD    IR_DOWN
 #define COMMAND_RIGHT       IR_RIGHT
@@ -69,8 +69,8 @@
 #define COMMAND_CALIBRATE   IR_0
 #define COMMAND_DANCE       IR_1
 #define COMMAND_WAVE        IR_3
-#define COMMAND_TWIST       IR_9
-#define COMMAND_TROT        IR_7
+#define COMMAND_TWIST       IR_7
+#define COMMAND_TROT        IR_9
 #define COMMAND_AUTO        IR_5
 #define COMMAND_TEST        IR_STAR
 
@@ -83,6 +83,12 @@
 #define COMMAND_ENTER       IR_OK
 #define COMMAND_UP          IR_UP
 #define COMMAND_DOWN        IR_DOWN
+
+/*
+ * Special codes not sent by the remote
+ */
+#define COMMAND_EMPTY       0x99 // code no command received
+#define COMMAND_INVALID     0x98 // code for command received, but not in mapping
 #endif
 
 #ifdef USE_KEYES_REMOTE
@@ -118,7 +124,6 @@
  * SECOND:
  * IR button to command mapping for better reading. IR buttons should only referenced here.
  */
-#define COMMAND_EMPTY       0 // no command received
 #define COMMAND_FORWARD     IR_UP
 #define COMMAND_BACKWARD    IR_DOWN
 #define COMMAND_RIGHT       IR_RIGHT
@@ -129,8 +134,8 @@
 #define COMMAND_CALIBRATE   IR_0
 #define COMMAND_DANCE       IR_1
 #define COMMAND_WAVE        IR_3
-#define COMMAND_TWIST       IR_9
-#define COMMAND_TROT        IR_7
+#define COMMAND_TWIST       IR_7
+#define COMMAND_TROT        IR_9
 #define COMMAND_AUTO        IR_5
 #define COMMAND_TEST        IR_STAR
 
@@ -143,6 +148,12 @@
 #define COMMAND_ENTER       IR_OK
 #define COMMAND_UP          IR_UP
 #define COMMAND_DOWN        IR_DOWN
+
+/*
+ * Special codes not sent by the remote
+ */
+#define COMMAND_EMPTY       0x99 // code no command received
+#define COMMAND_INVALID     0x98 // code for command received, but not in mapping
 #endif
 
 #ifdef USE_WM10_REMOTE
@@ -177,7 +188,6 @@
  * SECOND:
  * IR button to command mapping for better reading. IR buttons should only referenced here.
  */
-#define COMMAND_EMPTY       0 // no command received
 #define COMMAND_FORWARD     IR_UP
 #define COMMAND_BACKWARD    IR_DOWN
 #define COMMAND_RIGHT       IR_RIGHT
@@ -202,8 +212,108 @@
 #define COMMAND_ENTER       IR_ENTER
 #define COMMAND_UP          IR_UP
 #define COMMAND_DOWN        IR_DOWN
+
+/*
+ * Special codes not sent by the remote
+ */
+#define COMMAND_EMPTY       0x99 // code no command received
+#define COMMAND_INVALID     0x98 // code for command received, but not in mapping
 #endif
 
+#ifdef USE_BLACK_DVD_REMOTE
+#define IR_REMOTE_NAME "BLACK_DVD"
+#define HAS_ADDITIONAL_REMOTE_COMMANDS
+
+// Codes for black remote control for an old DVD Player
+#define IR_ADDRESS 0x7B80
+
+#define IR_ON_OFF 0x13
+
+#define IR_1    0x01
+#define IR_2    0x02
+#define IR_3    0x03
+#define IR_4    0x04
+#define IR_5    0x05
+#define IR_6    0x06
+#define IR_7    0x07
+#define IR_8    0x08
+#define IR_9    0x09
+#define IR_0    0x00
+
+#define IR_CH_PLUS      0x0A
+#define IR_CH_MINUS     0x0B
+
+#define IR_REC          0x15
+#define IR_PAUSE        0x1A
+
+#define IR_UP           0x16
+#define IR_DOWN         0x17
+#define IR_RIGHT        0x18
+#define IR_LEFT         0x19
+
+#define IR_ENTER        0x45
+#define IR_INDEX        0x14
+#define IR_CANCEL       0x4A
+#define IR_MENU         0x50
+
+// Lower small keys
+#define IR_1_LOWER      0x0D // Timer_REC
+#define IR_2_LOWER      0x1D
+#define IR_3_LOWER      0x5F // Call
+#define IR_4_LOWER      0x51
+#define IR_5_LOWER      0x4C
+#define IR_6_LOWER      0x4B
+#define IR_7_LOWER      0x1E
+#define IR_8_LOWER      0x12
+#define IR_9_LOWER      0x0E // Audio Select
+#define IR_EJECT        0x4E
+/*
+ * SECOND:
+ * IR button to command mapping for better reading. IR buttons should only referenced here.
+ */
+#define COMMAND_FORWARD     IR_UP
+#define COMMAND_BACKWARD    IR_DOWN
+#define COMMAND_RIGHT       IR_RIGHT
+#define COMMAND_LEFT        IR_LEFT
+
+#define COMMAND_CENTER      IR_ENTER
+#define COMMAND_STOP        IR_ON_OFF
+#define COMMAND_CALIBRATE   IR_REC
+#define COMMAND_DANCE       IR_1
+#define COMMAND_WAVE        IR_3
+#define COMMAND_TWIST       IR_7
+#define COMMAND_TROT        IR_9
+#define COMMAND_AUTO        IR_5
+#define COMMAND_TEST        IR_MENU
+
+#define COMMAND_INCREASE_SPEED  IR_6
+#define COMMAND_DECREASE_SPEED  IR_4
+#define COMMAND_INCREASE_HEIGHT IR_2
+#define COMMAND_DECREASE_HEIGHT IR_8
+
+// locally for doCalibration
+#define COMMAND_ENTER       IR_ENTER
+#define COMMAND_UP          IR_UP
+#define COMMAND_DOWN        IR_DOWN
+
+#define COMMAND_US_RIGHT    IR_CH_PLUS
+#define COMMAND_US_SCAN     IR_CH_MINUS
+#define COMMAND_US_LEFT     IR_0
+
+#define COMMAND_PATTERN_1   IR_1_LOWER
+#define COMMAND_PATTERN_2   IR_2_LOWER
+#define COMMAND_PATTERN_3   IR_3_LOWER
+
+#define COMMAND_PATTERN_HEARTBEAT   IR_7_LOWER
+#define COMMAND_PATTERN_FIRE        IR_8_LOWER
+#define COMMAND_PATTERN_WIPE        IR_EJECT
+
+/*
+ * Special codes not sent by the remote
+ */
+#define COMMAND_EMPTY       0x99 // code no command received
+#define COMMAND_INVALID     0x98 // code for command received, but not in mapping
+#endif
 /*
  * This is valid for all remotes above
  */
@@ -227,12 +337,12 @@ static const char dirForward[] PROGMEM ="dir forward";
 static const char dirBack[] PROGMEM ="dir back";
 static const char dirRight[] PROGMEM ="dir right";
 static const char dirLeft[] PROGMEM ="dir left";
-static const char volPlus[] PROGMEM ="increase speed";
-static const char volMinus[] PROGMEM ="decrease speed";
-static const char fastBack[] PROGMEM ="decrease height";
-static const char fastForward[] PROGMEM ="increase height";
+static const char increaseSpeed[] PROGMEM ="increase speed";
+static const char decreaseSpeed[] PROGMEM ="decrease speed";
+static const char increaseHeight[] PROGMEM ="increase height";
+static const char decreaseHeight[] PROGMEM ="decrease height";
 static const char wave[] PROGMEM ="wave";
-static const char mute[] PROGMEM ="calibration";
+static const char calibration[] PROGMEM ="calibration";
 //static const char onOff[] PROGMEM ="on/off";
 static const char stop[] PROGMEM ="stop";
 static const char dance[] PROGMEM ="dance";
@@ -240,45 +350,70 @@ static const char trot[] PROGMEM ="trot";
 static const char twist[] PROGMEM ="twist";
 static const char autoMove[] PROGMEM ="auto move";
 static const char myMove[] PROGMEM ="my move";
+static const char ultrasonicServo[] PROGMEM ="US servo";
 static const char test[] PROGMEM ="test";
+static const char pattern[] PROGMEM ="pattern";
 static const char unknown[] PROGMEM ="unknown";
+
+#define IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE 0x00 // default
+#define IR_COMMAND_FLAG_ACCEPT_REPEAT       0x01 // repeat accepted
+#define IR_COMMAND_FLAG_NOT_EXCLUSIVE       0x02 // Command can be processed any time
+#define IR_COMMAND_FLAG_NOT_EXCLUSIVE_REPEATABLE (IR_COMMAND_FLAG_ACCEPT_REPEAT | IR_COMMAND_FLAG_NOT_EXCLUSIVE)
 
 // Basic mapping structure
 struct IRToCommandMapping {
     uint8_t IRCode;
+    uint8_t Flags;
     void (*CommandToCall)();
     const char * CommandString;
 };
 
-//#define EMPTY_MAPPING // for educational purposes
-#ifndef EMPTY_MAPPING
 /*
  * Main mapping array of commands to C functions and command strings
+ * These commands
  */
-const struct IRToCommandMapping IRMapping[] = { { COMMAND_RIGHT, &doTurnRight, right }, { COMMAND_LEFT, &doTurnLeft, left }, {
-COMMAND_CENTER, &doCenterServos, center }, { COMMAND_FORWARD, &doCreepForward, forward }, { COMMAND_BACKWARD, &doCreepBack, back },
-        { COMMAND_CALIBRATE, &doCalibration, mute }, { COMMAND_DANCE, &doDance, dance }, { COMMAND_TWIST, &doTwist, twist }, {
-        COMMAND_WAVE, &doWave, wave }, { COMMAND_TROT, &doTrot, trot }, { COMMAND_AUTO, &doQuadrupedAutoMove, autoMove }, { COMMAND_TEST,
-                &doTest, test } };
+const struct IRToCommandMapping IRMapping[] = { {
+COMMAND_DANCE, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doDance, dance }, {
+COMMAND_TWIST, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doTwist, twist }, {
+COMMAND_WAVE, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doWave, wave }, {
+COMMAND_TROT, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doTrot, trot }, {
+COMMAND_AUTO, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doQuadrupedAutoMove, autoMove }, {
+COMMAND_TEST, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doTest, test }, {
+COMMAND_CENTER, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doCenterServos, center }, {
+COMMAND_CALIBRATE, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doCalibration, calibration }, {
+/*
+ * Non exclusive commands, set directions
+ */
+COMMAND_FORWARD, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doSetDirectionForward, dirForward }, {
+COMMAND_BACKWARD, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doSetDirectionBack, dirBack }, {
+COMMAND_RIGHT, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doSetDirectionRight, dirRight }, {
+COMMAND_LEFT, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doSetDirectionLeft, dirLeft }, {
+/*
+ * Repeatable commands
+ */
+COMMAND_INCREASE_SPEED, IR_COMMAND_FLAG_NOT_EXCLUSIVE_REPEATABLE, &doIncreaseSpeed, increaseSpeed }, {
+COMMAND_DECREASE_SPEED, IR_COMMAND_FLAG_NOT_EXCLUSIVE_REPEATABLE, &doDecreaseSpeed, decreaseSpeed }, {
+COMMAND_INCREASE_HEIGHT, IR_COMMAND_FLAG_NOT_EXCLUSIVE_REPEATABLE, &doIncreaseHeight, increaseHeight }, {
+COMMAND_DECREASE_HEIGHT, IR_COMMAND_FLAG_NOT_EXCLUSIVE_REPEATABLE, &doDecreaseHeight, decreaseHeight }, {
+COMMAND_STOP, IR_COMMAND_FLAG_NOT_EXCLUSIVE_REPEATABLE, &doStop, stop }
 
-const struct IRToCommandMapping IRMappingInstantCommands[] = { { COMMAND_FORWARD, &doSetDirectionForward, dirForward }, {
-COMMAND_BACKWARD, &doSetDirectionBack, dirBack }, { COMMAND_RIGHT, &doSetDirectionRight, dirRight }, { COMMAND_LEFT,
-        &doSetDirectionLeft, dirLeft }, { COMMAND_INCREASE_SPEED, &doIncreaseSpeed, volPlus }, { COMMAND_DECREASE_SPEED,
-        &doDecreaseSpeed, volMinus }, { COMMAND_INCREASE_HEIGHT, &doIncreaseHeight, fastForward }, { COMMAND_DECREASE_HEIGHT,
-        &doDecreaseHeight, fastBack }, { COMMAND_STOP, &doStop, stop } };
-#else
-// empty mapping
-const struct IRToCommandMapping IRMapping[] = { { COMMAND_RIGHT, &doTest, myMove }, { COMMAND_LEFT, &doTest, myMove }, {
-COMMAND_CENTER, &doCenterServos, center }, { COMMAND_FORWARD, &doBeep, beep }, { COMMAND_BACKWARD, &doBeep, beep }, {
-COMMAND_CALIBRATE, &doBeep, beep }, { COMMAND_DANCE, &doBeep, beep }, { COMMAND_TWIST, &doBeep, beep }, {
-COMMAND_WAVE, &doBeep, beep }, { COMMAND_TROT, &doBeep, beep }, { COMMAND_AUTO, &doBeep, beep }, { COMMAND_TEST, &doTest, test } };
+#ifdef HAS_ADDITIONAL_REMOTE_COMMANDS
+/*
+ * Commands not accessible by simple remote because of lack of keys
+ */
+        , { COMMAND_US_RIGHT, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doUSRight, ultrasonicServo }, {
+        COMMAND_US_LEFT, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doUSLeft, ultrasonicServo }, {
+        COMMAND_US_SCAN, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doUSScan, ultrasonicServo }, {
+        COMMAND_PATTERN_1, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doPattern1, pattern }, {
+        COMMAND_PATTERN_2, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doPattern2, pattern }, {
+        COMMAND_PATTERN_3, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doPattern3, pattern }, {
+        COMMAND_PATTERN_HEARTBEAT, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doPatternHeartbeat, pattern }, {
+        COMMAND_PATTERN_FIRE, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doPatternFire, pattern }, {
+        COMMAND_PATTERN_WIPE, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &wipeOutPatterns, pattern }
 
-const struct IRToCommandMapping IRMappingInstantCommands[] = { { COMMAND_FORWARD, &doBeep, beep }, {
-COMMAND_BACKWARD, &doBeep, beep }, { COMMAND_RIGHT, &doBeep, beep }, { COMMAND_LEFT, &doBeep, beep }, {
-COMMAND_INCREASE_SPEED, &doBeep, beep }, { COMMAND_DECREASE_SPEED, &doBeep, beep }, { COMMAND_INCREASE_HEIGHT, &doBeep, beep }, {
-COMMAND_DECREASE_HEIGHT, &doBeep, beep }, { COMMAND_STOP, &doBeep, beep } };
+#endif
+        };
 
-#endif // EMPTY_MAPPING
 #endif /* IR_COMMAND_MAPING_H_ */
 
 #pragma once
