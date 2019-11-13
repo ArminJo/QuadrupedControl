@@ -380,7 +380,9 @@ COMMAND_TROT, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doTrot, trot }, {
 COMMAND_AUTO, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doQuadrupedAutoMove, autoMove }, {
 COMMAND_TEST, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doTest, test }, {
 COMMAND_CENTER, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doCenterServos, center }, {
+#if defined(QUADRUPED_HAS_IR_CONTROL) && !defined(USE_USER_DEFINED_MOVEMENTS)
 COMMAND_CALIBRATE, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doCalibration, calibration }, {
+#endif
 /*
  * Non exclusive commands, set directions
  */

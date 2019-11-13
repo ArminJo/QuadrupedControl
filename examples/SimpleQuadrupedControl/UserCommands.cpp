@@ -1,7 +1,8 @@
 /*
  * UserCommands.cpp
  *
- * Put your code here to implement your own functions
+ * Put your code here to implement your own functions.
+ * If you want to use the default function, just comment the function out in this file.
  *
  *  Copyright (C) 2019  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
@@ -45,7 +46,9 @@
 #endif
 
 /*
- * The auto move function. Put your own moves here.
+ * ---------------------------------
+ * QUADRUPED PROGRAMMING CHEAT SHEET
+ * ---------------------------------
  *
  * Servos available:
  *  frontLeftPivotServo, frontLeftLiftServo
@@ -53,11 +56,11 @@
  *  backRightPivotServo, backRightLiftServo
  *  frontRightPivotServo, frontRightLiftServo
  *
+ * Useful variables:
  * sBodyHeightAngle contains the normal angle of lift servos.
+ * sMovingDirection  controls and contains the current direction. Can be MOVE_DIRECTION_FORWARD, MOVE_DIRECTION_LEFT etc.
  *
- * Useful commands:
- *
- * sMovingDirection = MOVE_DIRECTION_FORWARD; // MOVE_DIRECTION_LEFT etc.
+ * High level movements:
  * moveCreep(1);
  * centerServos();
  * moveTrot(1);
@@ -66,9 +69,9 @@
  * doLeanRight();
  * basicTwist(30);
  * doWave();
- * delayAndCheck(1000);
  *
- * The following patterns are available
+ * Timing:
+ * delayAndCheck(1000);
  *
  * To move the front left lift servo, use e.g.:
  * frontLeftLiftServo.easeTo(convertLegPercentHeightToAngle(100));
@@ -78,9 +81,10 @@
  *
  * To move all pivot servos simultaneously:
  * setPivotServos(100, 100, 80, 80);
- */
-
-/*
+ *
+ * To get the current angle of a servo:
+ * getCurrentAngle();
+ *
  * Quadrupeds with NeoPixel have the strips:
  * RightNeoPixelBar, FrontNeoPixelBar, LeftNeoPixelBar
  * QuadrupedNeoPixelBar (all bars chained together)
@@ -88,12 +92,21 @@
  * The following patterns are available:
  * RainbowCycle(), ColorWipe(), Fade()
  * Stripes(), Heartbeat(), ScannerExtended(), Fire(), Delay()
+ *
  */
 
 /*
- * Create your own basic movement here
- * doTest is mapped to the star on the remote
+ * Here you can create your own movements.
+ *
+ * I recommend to implement the following movements:
+ * 1. A twist forth and back.
+ * 2. Bows in different directions.
+ * 3. Wave with one leg. Lift up diagonal legs and modify the positions of the other two so that the body tilts in the right direction.
+ * 4. Turn. To get the current angle of a servo, use getCurrentAngle().
+ *
  */
+
+// doTwist() is mapped to the star on the remote
 void doTest() {
     sActionType = ACTION_TYPE_TEST;
 
@@ -134,9 +147,14 @@ void doTest() {
 // doTwist() is mapped to the 7 on the remote
 void doTwist() {
     sActionType = ACTION_TYPE_TWIST;
+    /*
+     * Put your own code here
+     */
+
     int8_t tTwistAngle = 30;
     // Move all pivot servos simultaneously
     setPivotServos(90 + tTwistAngle, 90 + tTwistAngle, 90 + tTwistAngle, 90 + tTwistAngle);
+
     sActionType = ACTION_TYPE_STOP;
 }
 

@@ -483,8 +483,10 @@ void signalLeg(uint8_t aPivotServoIndex) {
     sServoArray[aPivotServoIndex + LIFT_SERVO_OFFSET]->easeTo(90, 60);
 }
 
+
+#if defined(QUADRUPED_HAS_IR_CONTROL) && !defined(USE_USER_DEFINED_MOVEMENTS)
 /*
- * includes needed only for doCalibration
+ * include needed only for doCalibration
  */
 #include "IRCommandMapping.h" // for COMMAND_*
 
@@ -494,7 +496,6 @@ void signalLeg(uint8_t aPivotServoIndex) {
  */
 void doCalibration() {
 // disable it for user defined movements, since just testing the remote may lead to accidental wrong calibration
-#if defined(QUADRUPED_HAS_IR_CONTROL) && !defined(USE_USER_DEFINED_MOVEMENTS)
 
     uint8_t tPivotServoIndex = 0; // start with front left i.e. sServoArray[0]
     bool tGotExitCommand = false;
@@ -569,6 +570,6 @@ void doCalibration() {
         sServoArray[tPivotServoIndex + LIFT_SERVO_OFFSET]->print(&Serial);
         delay(200);
     }
-#endif
 }
+#endif
 
