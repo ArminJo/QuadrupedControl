@@ -51,12 +51,12 @@ bool sCallShowSynchronized; // Flag set e.g. by main loop to show the pattern sy
 NeoPatterns QuadrupedNeoPixelBar = NeoPatterns(NUM_PIXELS, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800, &QuadrupedOnPatternCompleteHandler,
         true);
 // false -> do not allow show on partial NeoPixel bar
-NeoPatterns RightNeoPixelBar = NeoPatterns(&QuadrupedNeoPixelBar, PIXEL_OFFSET_RIGHT_BAR, PIXELS_ON_ONE_BAR,
-        &QuadrupedOnPatternCompleteHandler, false, true);
-NeoPatterns FrontNeoPixelBar = NeoPatterns(&QuadrupedNeoPixelBar, PIXEL_OFFSET_FRONT_BAR, PIXELS_ON_ONE_BAR,
-        &QuadrupedOnPatternCompleteHandler, false, true);
-NeoPatterns LeftNeoPixelBar = NeoPatterns(&QuadrupedNeoPixelBar, PIXEL_OFFSET_LEFT_BAR, PIXELS_ON_ONE_BAR,
-        &QuadrupedOnPatternCompleteHandler, false, true);
+NeoPatterns RightNeoPixelBar = NeoPatterns(&QuadrupedNeoPixelBar, PIXEL_OFFSET_RIGHT_BAR, PIXELS_ON_ONE_BAR, false,
+        &QuadrupedOnPatternCompleteHandler, true);
+NeoPatterns FrontNeoPixelBar = NeoPatterns(&QuadrupedNeoPixelBar, PIXEL_OFFSET_FRONT_BAR, PIXELS_ON_ONE_BAR, false,
+        &QuadrupedOnPatternCompleteHandler, true);
+NeoPatterns LeftNeoPixelBar = NeoPatterns(&QuadrupedNeoPixelBar, PIXEL_OFFSET_LEFT_BAR, PIXELS_ON_ONE_BAR, false,
+        &QuadrupedOnPatternCompleteHandler, true);
 
 uint16_t getDelayFromSpeed() {
     uint16_t tDelay = 12000 / sServoSpeed;
@@ -142,7 +142,7 @@ bool isAtLeastOnePatternActive() {
 void handleServoTimerInterrupt() {
 #if defined(USE_PCA9685_SERVO_EXPANDER)
     // Otherwise it will hang forever in I2C transfer
-    sei();
+    interrupts(); // sei()
 #endif
 // Check the (misused) ICNC1 flag, which signals that ServoEasing interrupts were enabled again.
     if (TCCR1B & _BV(ICNC1)) {
