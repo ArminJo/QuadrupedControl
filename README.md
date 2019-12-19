@@ -4,7 +4,7 @@
 [![Hit Counter](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2FArminJo%2FQuadrupedControl)](https://github.com/brentvollebregt/hit-counter)
 
 ### YouTube video of mePed V2 in action controlled by an IR remote (SimpleQuadrupedControl example).
-[![mePed V2 in actions](https://i.ytimg.com/vi/cLgj_sr7f1o/hqdefault.jpg)](https://youtu.be/cLgj_sr7f1o)
+[![mePed V2 in actions](https://i.ytimg.com/vi/MsIjTRRUyGU/hqdefault.jpg)](https://youtu.be/MsIjTRRUyGU)
 
 Smooth servo movements are controlled by the [Servo easing library for Arduino](https://github.com/ArminJo/ServoEasing).
 For lifting the legs, the lift servos just use the easing type EASE_QUADRATIC_BOUNCING.
