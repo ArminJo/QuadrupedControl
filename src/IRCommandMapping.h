@@ -19,8 +19,8 @@
 //#define USE_KEYES_REMOTE_CLONE With number pad and direction control switched, will be taken as default
 //#define USE_KEYES_REMOTE // The mePed 2 Standard remote
 //#define USE_WM10_REMOTE
-//#define USE_BLACK_DVD_REMOTE
-#if !defined(USE_KEYES_REMOTE) && !defined(USE_WM10_REMOTE) && !defined(USE_KEYES_REMOTE_CLONE) && !defined(USE_BLACK_DVD_REMOTE)
+//#define USE_WHITE_DVD_REMOTE
+#if !defined(USE_KEYES_REMOTE) && !defined(USE_WM10_REMOTE) && !defined(USE_KEYES_REMOTE_CLONE) && !defined(USE_WHITE_DVD_REMOTE)
 #define USE_KEYES_REMOTE_CLONE // the one you can buy at aliexpress
 #endif
 
@@ -220,11 +220,11 @@
 #define COMMAND_INVALID     0x98 // code for command received, but not in mapping
 #endif
 
-#ifdef USE_BLACK_DVD_REMOTE
-#define IR_REMOTE_NAME "BLACK_DVD"
+#ifdef USE_WHITE_DVD_REMOTE
+#define IR_REMOTE_NAME "WHITE_DVD"
 #define HAS_ADDITIONAL_REMOTE_COMMANDS
 
-// Codes for black remote control for an old DVD Player
+// Codes for white remote control for an old DVD Player
 #define IR_ADDRESS 0x7B80
 
 #define IR_ON_OFF 0x13
@@ -350,7 +350,9 @@ static const char trot[] PROGMEM ="trot";
 static const char twist[] PROGMEM ="twist";
 static const char autoMove[] PROGMEM ="auto move";
 static const char myMove[] PROGMEM ="my move";
-static const char ultrasonicServo[] PROGMEM ="US servo";
+static const char ultrasonicServoLeft[] PROGMEM ="US servo left";
+static const char ultrasonicServoRight[] PROGMEM ="US servo right";
+static const char ultrasonicServoScan[] PROGMEM ="US servo scan";
 static const char test[] PROGMEM ="test";
 static const char pattern[] PROGMEM ="pattern";
 static const char unknown[] PROGMEM ="unknown";
@@ -403,9 +405,9 @@ COMMAND_STOP, IR_COMMAND_FLAG_NOT_EXCLUSIVE_REPEATABLE, &doStop, stop }
 /*
  * Commands not accessible by simple remote because of lack of keys
  */
-        , { COMMAND_US_RIGHT, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doUSRight, ultrasonicServo }, {
-        COMMAND_US_LEFT, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doUSLeft, ultrasonicServo }, {
-        COMMAND_US_SCAN, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doUSScan, ultrasonicServo }, {
+        , { COMMAND_US_RIGHT, IR_COMMAND_FLAG_NOT_EXCLUSIVE_REPEATABLE, &doUSRight, ultrasonicServoRight }, {
+        COMMAND_US_LEFT, IR_COMMAND_FLAG_NOT_EXCLUSIVE_REPEATABLE, &doUSLeft, ultrasonicServoLeft }, {
+        COMMAND_US_SCAN, IR_COMMAND_FLAG_NOT_EXCLUSIVE_REPEATABLE, &doUSScan, ultrasonicServoScan }, {
         COMMAND_PATTERN_1, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doPattern1, pattern }, {
         COMMAND_PATTERN_2, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doPattern2, pattern }, {
         COMMAND_PATTERN_3, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doPattern3, pattern }, {

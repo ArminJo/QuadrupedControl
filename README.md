@@ -8,3 +8,5 @@
 
 Smooth servo movements are controlled by the [Servo easing library for Arduino](https://github.com/ArminJo/ServoEasing).
 For lifting the legs, the lift servos just use the easing type EASE_QUADRATIC_BOUNCING.
+
+### A very simple and easy to understand version of controlling a mePed can be found [here](https://github.com/oracid/Easy-Quadruped-kinematic)

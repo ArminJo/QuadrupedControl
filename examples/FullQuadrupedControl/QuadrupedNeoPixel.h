@@ -30,7 +30,7 @@ bool isAtLeastOnePatternActive();
 void showPatternSynchronized();
 
 void handleAutomaticMovementPattern();
-bool handleQuadrupedNeoPixelUpdate();
+void handleQuadrupedNeoPixelUpdate();
 void handleServoTimerInterrupt();
 
 uint16_t getDelayFromSpeed();

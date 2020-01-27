@@ -92,9 +92,9 @@ void doPatternFire() {
 
 void doPatternHeartbeat() {
     uint16_t tDelay = getDelayFromSpeed();
-    RightNeoPixelBar.Heartbeat(COLOR32_GREEN_HALF, tDelay, 3);
-    FrontNeoPixelBar.Heartbeat(COLOR32_BLUE_HALF, tDelay, 3);
-    LeftNeoPixelBar.Heartbeat(COLOR32_RED_HALF, tDelay, 3);
+    RightNeoPixelBar.Heartbeat(COLOR32_GREEN_HALF, tDelay, 2);
+    FrontNeoPixelBar.Heartbeat(COLOR32_BLUE_HALF, tDelay, 2);
+    LeftNeoPixelBar.Heartbeat(COLOR32_RED_HALF, tDelay, 2);
 }
 
 void initNeoPatterns() {
@@ -166,7 +166,7 @@ void handleServoTimerInterrupt() {
  * and must therefore be synchronized with the servo pulse generation.
  * @return - true if at least one pattern is active.
  */
-bool handleQuadrupedNeoPixelUpdate() {
+void handleQuadrupedNeoPixelUpdate() {
 
     /*
      * Check for patterns start or update.
@@ -176,31 +176,14 @@ bool handleQuadrupedNeoPixelUpdate() {
         handleAutomaticMovementPattern(); // To trigger NeoPatterns generation
     }
 
-    bool tNeedShow = sCallShowSynchronized;
-    if (tNeedShow) {
-        sCallShowSynchronized = false;
+    if (!QuadrupedNeoPixelBar.updateAllPartialPatterns()) {
+        if (sCallShowSynchronized) {
+            // show anyway
+            QuadrupedNeoPixelBar.show();
+        }
     }
+    sCallShowSynchronized = false;
 
-    bool tAtLeastOnePatternActive = false;
-    if (RightNeoPixelBar.ActivePattern != PATTERN_NONE) {
-        tAtLeastOnePatternActive = true;
-        tNeedShow |= RightNeoPixelBar.update();
-    }
-    if (FrontNeoPixelBar.ActivePattern != PATTERN_NONE) {
-        tAtLeastOnePatternActive = true;
-        tNeedShow |= FrontNeoPixelBar.update();
-    }
-    if (LeftNeoPixelBar.ActivePattern != PATTERN_NONE) {
-        tAtLeastOnePatternActive = true;
-        tNeedShow |= LeftNeoPixelBar.update();
-    }
-    if (QuadrupedNeoPixelBar.ActivePattern != PATTERN_NONE) {
-        // One pattern for all 3 bars here
-        QuadrupedNeoPixelBar.update();
-    } else if (tNeedShow) {
-        QuadrupedNeoPixelBar.show();
-    }
-    return tAtLeastOnePatternActive;
 }
 
 /*
@@ -255,7 +238,7 @@ void handleAutomaticMovementPattern() {
 #ifdef INFO
             Serial.println(F("Starting Heartbeat"));
 #endif
-            QuadrupedNeoPixelBar.Heartbeat(COLOR32_BLUE_QUARTER, getDelayFromSpeed(), 3, FLAG_DO_NOT_CLEAR);
+            QuadrupedNeoPixelBar.Heartbeat(COLOR32_BLUE_QUARTER, getDelayFromSpeed(), 2, FLAG_DO_NOT_CLEAR);
             break;
 
         default:
