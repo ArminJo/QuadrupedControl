@@ -176,6 +176,7 @@ void handleQuadrupedNeoPixelUpdate() {
         handleAutomaticMovementPattern(); // To trigger NeoPatterns generation
     }
 
+#if VERSION_NEOPATTERNS_NUMERICAL >= 220
     if (!QuadrupedNeoPixelBar.updateAllPartialPatterns()) {
         if (sCallShowSynchronized) {
             // show anyway
@@ -183,6 +184,30 @@ void handleQuadrupedNeoPixelUpdate() {
         }
     }
     sCallShowSynchronized = false;
+
+#else
+    bool tNeedShow = sCallShowSynchronized;
+    if (tNeedShow) {
+        sCallShowSynchronized = false;
+    }
+
+    if (RightNeoPixelBar.ActivePattern != PATTERN_NONE) {
+        tNeedShow |= RightNeoPixelBar.update();
+    }
+    if (FrontNeoPixelBar.ActivePattern != PATTERN_NONE) {
+        tNeedShow |= FrontNeoPixelBar.update();
+    }
+    if (LeftNeoPixelBar.ActivePattern != PATTERN_NONE) {
+        tNeedShow |= LeftNeoPixelBar.update();
+    }
+    if (QuadrupedNeoPixelBar.ActivePattern != PATTERN_NONE) {
+        // One pattern for all 3 bars here
+        QuadrupedNeoPixelBar.update();
+    } else if (tNeedShow) {
+        QuadrupedNeoPixelBar.show();
+    }
+
+#endif
 
 }
 
