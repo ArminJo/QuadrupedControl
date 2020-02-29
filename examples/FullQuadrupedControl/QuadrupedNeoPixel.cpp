@@ -137,12 +137,11 @@ bool isAtLeastOnePatternActive() {
  * Calling of updateAllServos() is controlled by the misused ICNC1 / Input Capture Noise Canceler flag, which is set by ServoEasing.
  *
  * Update all servos from list and check if all servos have stopped.
- * Can not call yield() here, since we are in an ISR context here.
  */
 void handleServoTimerInterrupt() {
 #if defined(USE_PCA9685_SERVO_EXPANDER)
     // Otherwise it will hang forever in I2C transfer
-    interrupts(); // sei()
+    interrupts(); // Enable interrupts
 #endif
 // Check the (misused) ICNC1 flag, which signals that ServoEasing interrupts were enabled again.
     if (TCCR1B & _BV(ICNC1)) {
