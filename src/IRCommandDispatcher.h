@@ -10,37 +10,88 @@
 
 #include <stdint.h>
 
-#define IR_REPEAT_TIMEOUT_MS 300 // The same command after IR_REPEAT_TIMEOUT_MS ms is not interpreted as a repeat command
-
 #if ! defined(IR_RECEIVER_PIN)
 #define IR_RECEIVER_PIN  A0
 #endif
 
-#if (IR_RECEIVER_PIN != 2) && (IR_RECEIVER_PIN != 3)
-#include <PinChangeInterrupt.h> // must be included if we do not use pin 2 or 3
-#endif
+/*
+ * For command mapping file
+ */
+#define IR_COMMAND_FLAG_REGULAR             0x00 // default - repeat not accepted, only one command at a time
+#define IR_COMMAND_FLAG_REPEATABLE          0x01 // repeat accepted
+#define IR_COMMAND_FLAG_EXECUTE_ALWAYS      0x02 // (Non blocking) Command that can be processed any time and may interrupt other IR commands - used for stop etc.
+#define IR_COMMAND_FLAG_REPEATABLE_EXECUTE_ALWAYS (IR_COMMAND_FLAG_REPEATABLE | IR_COMMAND_FLAG_EXECUTE_ALWAYS)
+/*
+ * if this command is received, requestToStopReceived is set until call of next loop.
+ * This stops ongoing commands which use:  RDispatcher.delayAndCheckForIRCommand(100);  RETURN_IF_STOP;
+ */
+#define IR_COMMAND_FLAG_IS_STOP_COMMAND     0x04 // implies IR_COMMAND_FLAG_EXECUTE_ALWAYS
 
+// Basic mapping structure
+struct IRToCommandMapping {
+    uint8_t IRCode;
+    uint8_t Flags;
+    void (*CommandToCall)();
+    const char * CommandString;
+};
 
-extern bool sJustCalledExclusiveIRCommand;
-extern bool sExecutingExclusiveCommand;  // set if we just execute a command by dispatcher
-extern bool sCurrentCommandIsRepeat;
-extern uint8_t sRejectedExclusiveCommand;
-extern bool sAtLeastOneValidIRCodeReceived;   // set if we received a valid IR code. Used for breaking timeout for auto move.
-extern uint32_t sLastTimeOfIRCodeReceived; // millis of last IR command
-extern bool sRequestToStopReceived; // flag for main loop, set by checkIRInputForNonExclusiveCommand()
+struct IRData {
+    uint8_t protocol;   // not used but useful for compatibility to IRMP
+    uint16_t address;   // to distinguish between multiple senders
+    uint16_t command;
+    bool isRepeat;
+};
 
-#define RETURN_IF_STOP if (sRequestToStopReceived) return
+/*
+ * Special codes (hopefully) not sent by the remote - otherwise please redefine it here
+ */
+#define COMMAND_EMPTY       0xFE // code no command received
+#define COMMAND_INVALID     0xFF // code for command received, but not in mapping
 
-void setupIRDispatcher();
-bool loopIRDispatcher(bool takeRejectedCommand = true);
+#define RETURN_IF_STOP if (IRDispatcher.requestToStopReceived) return
+/*
+ * Return values of loopIRDispatcher and checkAndCallCommand
+ */
+#define CALLED 0
+#define IR_CODE_EMPTY 1
+#define NOT_CALLED_MASK 0x02
+#define FOUND_BUT_RECURSIVE_LOCK 2
+#define FOUND_BUT_REPEAT_NOT_ACCEPTED 3
+#define NOT_FOUND_MASK 0x04
+#define IR_CODE_NOT_FOUND 4
 
-uint8_t getIRCommand(bool doWait);
-bool checkIRInputForNonExclusiveCommand();
+class IRCommandDispatcher {
+public:
+    void init();
+    void loop(bool aRunRejectedCommand = true);
+    void printIRCommandString();
+    void setRequestToStopReceived();
 
-uint8_t checkAndCallCommand(uint8_t aIRCode);
-bool checkAndCallInstantCommands(uint8_t aIRCode); // function to search in MappingInstantCommands array
+    bool checkIRInputForAlwaysExecutableCommand(); // Used by delayAndCheckForIRCommand()
+    bool delayAndCheckForIRCommand(uint16_t aDelayMillis);
 
-void printIRCommandString(uint8_t aIRCode);
+    uint8_t currentRegularCommandCalled = COMMAND_INVALID; // The code for the current called command
+    bool executingRegularCommand = false;               // Lock for recursive calls of regular commands
+    bool justCalledRegularIRCommand = false;  // Flag that a regular command was received and called - is set before call of command
+    uint8_t rejectedRegularCommand = COMMAND_INVALID; // Storage for rejected command to allow the current command to end, before it is called by main loop
+    /*
+     * Flag for main loop, set by checkIRInputForAlwaysExecutableCommand().
+     * It works like an exception so we do not need to propagate the return value from the delay up to the movements.
+     * Instead we can use "if (requestToStopReceived) return;" (available as macro RETURN_IF_STOP).
+     */
+    bool requestToStopReceived;
+
+    struct IRData IRReceivedData;
+    unsigned long lastIRCodeMillis = 0;                 // millis() of last IR command received - for timeouts etc.
+
+    /*
+     * Functions used internally
+     */
+    uint8_t checkAndCallCommand();
+    bool getIRCommand(bool doWait);
+};
+
+extern IRCommandDispatcher IRDispatcher;
 
 #endif /* SRC_IRCOMMANDDISPATCHER_H_ */
 

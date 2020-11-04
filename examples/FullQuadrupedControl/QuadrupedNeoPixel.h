@@ -8,7 +8,7 @@
 #ifndef QUADRUPED_NEOPIXEL_H_
 #define QUADRUPED_NEOPIXEL_H_
 
-#include "NeoPatterns.h"
+#include "NeoPatterns.h" // Click here to get the library: http://librarymanager/All#NeoPatterns
 
 #define PIN_NEOPIXEL    4
 // How many NeoPixels are mounted?

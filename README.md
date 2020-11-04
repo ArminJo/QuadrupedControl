@@ -1,4 +1,6 @@
 # QuadrupedControl a quadruped / mePed V2 spider robot control library
+Available as "QuadrupedControl" example of Arduino library "ServoEasing"
+
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Build Status](https://github.com/ArminJo/QuadrupedControl/workflows/LibraryBuild/badge.svg)](https://github.com/ArminJo/QuadrupedControl/actions)
 [![Hit Counter](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2FArminJo%2FQuadrupedControl)](https://github.com/brentvollebregt/hit-counter)

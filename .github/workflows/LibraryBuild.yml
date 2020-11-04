@@ -16,10 +16,8 @@ jobs:
     runs-on: ubuntu-latest # I picked Ubuntu to use shell scripts.
 
     env:
-      # Space separated list without double quotes around the list. 
-      # If you need a library with a space in its name, like Adafruit NeoPixel or Adafruit INA219, you must use double quotes
-      # around the name and have at least 2 entries, where the first must be without double quotes! You may use Servo as dummy entry.
-      REQUIRED_LIBRARIES: Servo ServoEasing PinChangeInterrupt IRLremote NeoPatterns "Adafruit NeoPixel" PlayRtttl
+      # Comma separated list without double quotes around the list.
+      REQUIRED_LIBRARIES: Servo,ServoEasing,PinChangeInterrupt,IRLremote,NeoPatterns,Adafruit NeoPixel,PlayRtttl
 
     strategy:
       matrix:
@@ -38,12 +36,10 @@ jobs:
           - arduino:avr:uno|AllFeatures
 
         # Specify parameters for each board.
-        # Parameters can be: examples-exclude and examples-build-properties
-        # You may exclude specific examples for a board with examples-exclude: Use a space separated list.
         #############################################################################################################
         include:
           - arduino-boards-fqbn: arduino:avr:uno|AllFeatures
-            examples-build-properties:
+            build-properties:
               QuadrupedControl:
                 -DINFO
                 -DQUADRUPED_HAS_IR_CONTROL
@@ -62,5 +58,5 @@ jobs:
         uses: ArminJo/arduino-test-compile@master
         with:
           arduino-board-fqbn: ${{ matrix.arduino-boards-fqbn }}
-          libraries: ${{ env.REQUIRED_LIBRARIES }}
-          examples-build-properties: ${{ toJson(matrix.examples-build-properties) }}
+          required-libraries: ${{ env.REQUIRED_LIBRARIES }}
+          build-properties: ${{ toJson(matrix.build-properties) }}

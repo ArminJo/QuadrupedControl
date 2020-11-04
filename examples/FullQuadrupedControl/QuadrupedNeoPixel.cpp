@@ -43,7 +43,7 @@
 
 //#define INFO // comment this out to see serial info output
 
-void QuadrupedOnPatternCompleteHandler(NeoPatterns * aLedsPtr);
+void QuadrupedOnPatternCompleteHandler(NeoPatterns *aLedsPtr);
 bool sCleanPatternAfterEnd;
 bool sStartOrChangeNeoPatterns; // Flag set e.g. by main loop after calling a main command. Flag is read by ISR, to check for new patterns.
 bool sCallShowSynchronized; // Flag set e.g. by main loop to show the pattern synchronized (with servos).
@@ -277,7 +277,7 @@ void handleAutomaticMovementPattern() {
 /*
  * The completion callback for each pattern
  */
-void QuadrupedOnPatternCompleteHandler(NeoPatterns * aLedsPtr) {
+void QuadrupedOnPatternCompleteHandler(NeoPatterns *aLedsPtr) {
 #ifdef INFO
     Serial.print(F("Offset="));
     Serial.print(aLedsPtr->PixelOffset);

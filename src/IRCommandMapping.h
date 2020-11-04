@@ -5,7 +5,11 @@
  *
  *  Created on: 08.03.2019
  *      Author: Armin
- */
+ *
+ * Mapping for controlling a mePed Robot V2 with 8 servos using an IR Remote at pin A0
+ * Supported IR remote are KEYES (the original mePed remote) and WM10 and ...
+ * Select the one you have below.
+  */
 
 #ifndef IR_COMMAND_MAPING_H_
 #define IR_COMMAND_MAPING_H_
@@ -27,9 +31,6 @@
 #if (defined(USE_KEYES_REMOTE) && defined(USE_WM10_REMOTE)) || (defined(USE_KEYES_REMOTE) && defined(USE_KEYES_REMOTE_CLONE))
 #error "Please choose only one remote for compile"
 #endif
-
-#define IR_NEC_REPEAT_ADDRESS 0xFFFF
-#define IR_NEC_REPEAT_CODE 0x0
 
 #ifdef USE_KEYES_REMOTE_CLONE
 #define IR_REMOTE_NAME "KEYES_CLONE"
@@ -83,12 +84,6 @@
 #define COMMAND_ENTER       IR_OK
 #define COMMAND_UP          IR_UP
 #define COMMAND_DOWN        IR_DOWN
-
-/*
- * Special codes not sent by the remote
- */
-#define COMMAND_EMPTY       0x99 // code no command received
-#define COMMAND_INVALID     0x98 // code for command received, but not in mapping
 #endif
 
 #ifdef USE_KEYES_REMOTE
@@ -148,12 +143,6 @@
 #define COMMAND_ENTER       IR_OK
 #define COMMAND_UP          IR_UP
 #define COMMAND_DOWN        IR_DOWN
-
-/*
- * Special codes not sent by the remote
- */
-#define COMMAND_EMPTY       0x99 // code no command received
-#define COMMAND_INVALID     0x98 // code for command received, but not in mapping
 #endif
 
 #ifdef USE_WM10_REMOTE
@@ -213,11 +202,6 @@
 #define COMMAND_UP          IR_UP
 #define COMMAND_DOWN        IR_DOWN
 
-/*
- * Special codes not sent by the remote
- */
-#define COMMAND_EMPTY       0x99 // code no command received
-#define COMMAND_INVALID     0x98 // code for command received, but not in mapping
 #endif
 
 #ifdef USE_WHITE_DVD_REMOTE
@@ -307,18 +291,7 @@
 #define COMMAND_PATTERN_HEARTBEAT   IR_7_LOWER
 #define COMMAND_PATTERN_FIRE        IR_8_LOWER
 #define COMMAND_PATTERN_WIPE        IR_EJECT
-
-/*
- * Special codes not sent by the remote
- */
-#define COMMAND_EMPTY       0x99 // code no command received
-#define COMMAND_INVALID     0x98 // code for command received, but not in mapping
 #endif
-/*
- * This is valid for all remotes above
- */
-#define IR_REPEAT_ADDRESS IR_NEC_REPEAT_ADDRESS
-#define IR_REPEAT_CODE IR_NEC_REPEAT_CODE
 
 /*
  * THIRD:
@@ -357,63 +330,49 @@ static const char test[] PROGMEM ="test";
 static const char pattern[] PROGMEM ="pattern";
 static const char unknown[] PROGMEM ="unknown";
 
-#define IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE 0x00 // default
-#define IR_COMMAND_FLAG_ACCEPT_REPEAT       0x01 // repeat accepted
-#define IR_COMMAND_FLAG_NOT_EXCLUSIVE       0x02 // Command can be processed any time
-#define IR_COMMAND_FLAG_NOT_EXCLUSIVE_REPEATABLE (IR_COMMAND_FLAG_ACCEPT_REPEAT | IR_COMMAND_FLAG_NOT_EXCLUSIVE)
-
-// Basic mapping structure
-struct IRToCommandMapping {
-    uint8_t IRCode;
-    uint8_t Flags;
-    void (*CommandToCall)();
-    const char * CommandString;
-};
-
 /*
  * Main mapping array of commands to C functions and command strings
- * These commands
  */
 const struct IRToCommandMapping IRMapping[] = { {
-COMMAND_DANCE, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doDance, dance }, {
-COMMAND_TWIST, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doTwist, twist }, {
-COMMAND_WAVE, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doWave, wave }, {
-COMMAND_TROT, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doTrot, trot }, {
-COMMAND_AUTO, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doQuadrupedAutoMove, autoMove }, {
-COMMAND_TEST, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doTest, test }, {
-COMMAND_CENTER, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doCenterServos, center }, {
+COMMAND_DANCE, IR_COMMAND_FLAG_REGULAR, &doDance, dance }, {
+COMMAND_TWIST, IR_COMMAND_FLAG_REGULAR, &doTwist, twist }, {
+COMMAND_WAVE, IR_COMMAND_FLAG_REGULAR, &doWave, wave }, {
+COMMAND_TROT, IR_COMMAND_FLAG_REGULAR, &doTrot, trot }, {
+COMMAND_AUTO, IR_COMMAND_FLAG_REGULAR, &doQuadrupedAutoMove, autoMove }, {
+COMMAND_TEST, IR_COMMAND_FLAG_REGULAR, &doTest, test }, {
+COMMAND_CENTER, IR_COMMAND_FLAG_REGULAR, &doCenterServos, center }, {
 #if defined(QUADRUPED_HAS_IR_CONTROL) && !defined(USE_USER_DEFINED_MOVEMENTS)
-COMMAND_CALIBRATE, IR_COMMAND_FLAG_NO_REPEAT_EXCLUSIVE, &doCalibration, calibration }, {
+        COMMAND_CALIBRATE, IR_COMMAND_FLAG_REGULAR, &doCalibration, calibration }, {
 #endif
+        /*
+         * Short commands, which can be executed always, set directions
+         */
+        COMMAND_FORWARD, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &doSetDirectionForward, dirForward }, {
+COMMAND_BACKWARD, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &doSetDirectionBack, dirBack }, {
+COMMAND_RIGHT, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &doSetDirectionRight, dirRight }, {
+COMMAND_LEFT, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &doSetDirectionLeft, dirLeft }, {
 /*
- * Non exclusive commands, set directions
+ * Repeatable short commands
  */
-COMMAND_FORWARD, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doSetDirectionForward, dirForward }, {
-COMMAND_BACKWARD, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doSetDirectionBack, dirBack }, {
-COMMAND_RIGHT, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doSetDirectionRight, dirRight }, {
-COMMAND_LEFT, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doSetDirectionLeft, dirLeft }, {
-/*
- * Repeatable commands
- */
-COMMAND_INCREASE_SPEED, IR_COMMAND_FLAG_NOT_EXCLUSIVE_REPEATABLE, &doIncreaseSpeed, increaseSpeed }, {
-COMMAND_DECREASE_SPEED, IR_COMMAND_FLAG_NOT_EXCLUSIVE_REPEATABLE, &doDecreaseSpeed, decreaseSpeed }, {
-COMMAND_INCREASE_HEIGHT, IR_COMMAND_FLAG_NOT_EXCLUSIVE_REPEATABLE, &doIncreaseHeight, increaseHeight }, {
-COMMAND_DECREASE_HEIGHT, IR_COMMAND_FLAG_NOT_EXCLUSIVE_REPEATABLE, &doDecreaseHeight, decreaseHeight }, {
-COMMAND_STOP, IR_COMMAND_FLAG_NOT_EXCLUSIVE_REPEATABLE, &doStop, stop }
+COMMAND_INCREASE_SPEED, IR_COMMAND_FLAG_REPEATABLE_EXECUTE_ALWAYS, &doIncreaseSpeed, increaseSpeed }, {
+COMMAND_DECREASE_SPEED, IR_COMMAND_FLAG_REPEATABLE_EXECUTE_ALWAYS, &doDecreaseSpeed, decreaseSpeed }, {
+COMMAND_INCREASE_HEIGHT, IR_COMMAND_FLAG_REPEATABLE_EXECUTE_ALWAYS, &doIncreaseHeight, increaseHeight }, {
+COMMAND_DECREASE_HEIGHT, IR_COMMAND_FLAG_REPEATABLE_EXECUTE_ALWAYS, &doDecreaseHeight, decreaseHeight }, {
+COMMAND_STOP, IR_COMMAND_FLAG_IS_STOP_COMMAND, &doStop, stop }
 
 #ifdef HAS_ADDITIONAL_REMOTE_COMMANDS
-/*
- * Commands not accessible by simple remote because of lack of keys
- */
-        , { COMMAND_US_RIGHT, IR_COMMAND_FLAG_NOT_EXCLUSIVE_REPEATABLE, &doUSRight, ultrasonicServoRight }, {
-        COMMAND_US_LEFT, IR_COMMAND_FLAG_NOT_EXCLUSIVE_REPEATABLE, &doUSLeft, ultrasonicServoLeft }, {
-        COMMAND_US_SCAN, IR_COMMAND_FLAG_NOT_EXCLUSIVE_REPEATABLE, &doUSScan, ultrasonicServoScan }, {
-        COMMAND_PATTERN_1, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doPattern1, pattern }, {
-        COMMAND_PATTERN_2, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doPattern2, pattern }, {
-        COMMAND_PATTERN_3, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doPattern3, pattern }, {
-        COMMAND_PATTERN_HEARTBEAT, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doPatternHeartbeat, pattern }, {
-        COMMAND_PATTERN_FIRE, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &doPatternFire, pattern }, {
-        COMMAND_PATTERN_WIPE, IR_COMMAND_FLAG_NOT_EXCLUSIVE, &wipeOutPatterns, pattern }
+        /*
+         * Commands not accessible by simple remote because of lack of keys
+         */
+        , { COMMAND_US_RIGHT, IR_COMMAND_FLAG_REPEATABLE_EXECUTE_ALWAYS, &doUSRight, ultrasonicServoRight }, {
+        COMMAND_US_LEFT, IR_COMMAND_FLAG_REPEATABLE_EXECUTE_ALWAYS, &doUSLeft, ultrasonicServoLeft }, {
+        COMMAND_US_SCAN, IR_COMMAND_FLAG_REPEATABLE_EXECUTE_ALWAYS, &doUSScan, ultrasonicServoScan }, {
+        COMMAND_PATTERN_1, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &doPattern1, pattern }, {
+        COMMAND_PATTERN_2, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &doPattern2, pattern }, {
+        COMMAND_PATTERN_3, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &doPattern3, pattern }, {
+        COMMAND_PATTERN_HEARTBEAT, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &doPatternHeartbeat, pattern }, {
+        COMMAND_PATTERN_FIRE, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &doPatternFire, pattern }, {
+        COMMAND_PATTERN_WIPE, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &wipeOutPatterns, pattern }
 
 #endif
         };
