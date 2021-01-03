@@ -40,13 +40,32 @@
 
 IRCommandDispatcher IRDispatcher;
 
-#if defined(USE_IRMP_LIBRARY)
-#define getIRData() irmp_get_data((IRMP_DATA*)&IRReceivedData)
+#if defined(USE_TINY_IR_RECEIVER)
+#define IR_INPUT_PIN IR_RECEIVER_PIN
+#include "TinyIRReceiver.cpp.h"
 
+void IRCommandDispatcher::init() {
+    initPCIInterruptForTinyReceiver();
+}
+
+// data is already copied by callback
+bool getIRData(){
+    return true;
+}
+
+#elif defined(USE_IRMP_LIBRARY)
 void IRCommandDispatcher::init() {
     irmp_init();
 }
 
+bool getIRData() {
+    IRMP_DATA tTeporaryData;
+    irmp_get_data(&tTeporaryData);
+    IRDispatcher.IRReceivedData.address = tTeporaryData.address;
+    IRDispatcher.IRReceivedData.command = tTeporaryData.command;
+    IRDispatcher.IRReceivedData.isRepeat = tTeporaryData.flags & IRMP_FLAG_REPETITION;
+    return true;
+}
 
 #elif defined(USE_IRL_REMOTE_LIBRARY)
 
@@ -104,11 +123,13 @@ void IRCommandDispatcher::init() {
  *
  * @param aRunRejectedCommand if true run a command formerly rejected because of recursive calling.
  */
-void IRCommandDispatcher::loop(bool aRunRejectedCommand) {
+void IRCommandDispatcher::loop(bool aRunRejectedCommand)
+{
     /*
      * search IR code or take last rejected command and call associated function
      */
-    if (aRunRejectedCommand && (rejectedRegularCommand != COMMAND_INVALID)) {
+    if (aRunRejectedCommand && (rejectedRegularCommand != COMMAND_INVALID))
+    {
 #ifdef INFO
         Serial.print(F("Take rejected command = 0x"));
         Serial.println(rejectedRegularCommand, HEX);
@@ -119,7 +140,8 @@ void IRCommandDispatcher::loop(bool aRunRejectedCommand) {
         checkAndCallCommand();
     }
 
-    if (getIRCommand(false)) {
+    if (getIRCommand(false))
+    {
         checkAndCallCommand();
     }
 }
@@ -128,14 +150,14 @@ void IRCommandDispatcher::loop(bool aRunRejectedCommand) {
  * Waits for next IR command, and returns IR code.
  * @return true if new command was received
  */
-bool IRCommandDispatcher::getIRCommand(bool doWait) {
-    do {
-        if (getIRData()) {
+bool IRCommandDispatcher::getIRCommand(bool doWait)
+{
+    do
+    {
+        if (getIRData())
+        {
             lastIRCodeMillis = millis();
 #ifdef INFO
-# if defined(USE_IRMP_LIBRARY)
-            irmp_result_print((IRMP_DATA*)&IRReceivedData);
-#  else
             Serial.print(F("A=0x"));
             Serial.print(IRReceivedData.address, HEX);
             Serial.print(F(" C=0x"));
@@ -144,19 +166,22 @@ bool IRCommandDispatcher::getIRCommand(bool doWait) {
                 Serial.print(F("R"));
             }
             Serial.println();
-#  endif
 #endif
-            if (IRReceivedData.isRepeat || IRReceivedData.address == IR_ADDRESS) {
+            if (IRReceivedData.isRepeat || IRReceivedData.address == IR_ADDRESS)
+            {
                 // Received new code with right address or repeat
                 return true;
-            } else {
+            }
+            else
+            {
 #ifdef INFO
                 Serial.print(F(" Wrong address. Expected 0x"));
                 Serial.println(IR_ADDRESS, HEX);
 #endif
             }
         }
-    } while (doWait);
+    }
+    while (doWait);
 
     return false;
 }
@@ -164,13 +189,17 @@ bool IRCommandDispatcher::getIRCommand(bool doWait) {
 /*
  * Sets flags justCalledRegularIRCommand, executingRegularCommand
  */
-uint8_t IRCommandDispatcher::checkAndCallCommand() {
-    if (IRReceivedData.command == COMMAND_EMPTY) {
+uint8_t IRCommandDispatcher::checkAndCallCommand()
+{
+    if (IRReceivedData.command == COMMAND_EMPTY)
+    {
         return IR_CODE_EMPTY;
     }
 
-    for (uint8_t i = 0; i < sizeof(IRMapping) / sizeof(struct IRToCommandMapping); ++i) {
-        if (IRReceivedData.command == IRMapping[i].IRCode) {
+    for (uint8_t i = 0; i < sizeof(IRMapping) / sizeof(struct IRToCommandMapping); ++i)
+    {
+        if (IRReceivedData.command == IRMapping[i].IRCode)
+        {
 
 #ifdef INFO
             const __FlashStringHelper * tCommandName = reinterpret_cast<const __FlashStringHelper *>(IRMapping[i].CommandString);
@@ -178,7 +207,8 @@ uint8_t IRCommandDispatcher::checkAndCallCommand() {
             /*
              * Check for repeat and if it is allowed for the current command
              */
-            if (IRReceivedData.isRepeat && !(IRMapping[i].Flags & IR_COMMAND_FLAG_REPEATABLE)) {
+            if (IRReceivedData.isRepeat && !(IRMapping[i].Flags & IR_COMMAND_FLAG_REPEATABLE))
+            {
 #ifdef DEBUG
                 Serial.print(F("Repeats of command \""));
                 Serial.print(tCommandName);
@@ -190,7 +220,8 @@ uint8_t IRCommandDispatcher::checkAndCallCommand() {
             /*
              * Do not accept recursive call of the same command
              */
-            if (currentRegularCommandCalled == IRReceivedData.command) {
+            if (currentRegularCommandCalled == IRReceivedData.command)
+            {
 #ifdef DEBUG
                 Serial.print(F("Recursive command \""));
                 Serial.print(tCommandName);
@@ -202,12 +233,15 @@ uint8_t IRCommandDispatcher::checkAndCallCommand() {
             /*
              * Handle stop command and requestToStopReceived flag
              */
-            if (IRMapping[i].Flags & IR_COMMAND_FLAG_IS_STOP_COMMAND) {
+            if (IRMapping[i].Flags & IR_COMMAND_FLAG_IS_STOP_COMMAND)
+            {
                 requestToStopReceived = true;
 #ifdef INFO
                 Serial.println(F("Stop command received"));
 #endif
-            } else {
+            }
+            else
+            {
                 // lets start a new turn
                 requestToStopReceived = false;
             }
@@ -218,8 +252,10 @@ uint8_t IRCommandDispatcher::checkAndCallCommand() {
 #endif
 
             bool tIsRegularCommand = !(IRMapping[i].Flags & IR_COMMAND_FLAG_EXECUTE_ALWAYS);
-            if (tIsRegularCommand) {
-                if (executingRegularCommand) {
+            if (tIsRegularCommand)
+            {
+                if (executingRegularCommand)
+                {
                     /*
                      * A regular command may not be called as long as another regular command is running.
                      */
@@ -239,7 +275,9 @@ uint8_t IRCommandDispatcher::checkAndCallCommand() {
                 IRMapping[i].CommandToCall();
                 executingRegularCommand = false;
                 currentRegularCommandCalled = COMMAND_INVALID;
-            } else {
+            }
+            else
+            {
                 // short command here, just call
                 IRMapping[i].CommandToCall();
             }
@@ -249,18 +287,22 @@ uint8_t IRCommandDispatcher::checkAndCallCommand() {
     return IR_CODE_NOT_FOUND;
 }
 
-void IRCommandDispatcher::setRequestToStopReceived() {
+void IRCommandDispatcher::setRequestToStopReceived()
+{
     requestToStopReceived = true;
 }
 
 /*
  * @return  true (and sets requestToStopReceived) if invalid or recursive regular IR command received
  */
-bool IRCommandDispatcher::checkIRInputForAlwaysExecutableCommand() {
+bool IRCommandDispatcher::checkIRInputForAlwaysExecutableCommand()
+{
     uint8_t tCheckResult;
-    if (getIRCommand(false)) {
+    if (getIRCommand(false))
+    {
         tCheckResult = checkAndCallCommand();
-        if ((tCheckResult == IR_CODE_NOT_FOUND) || (tCheckResult == FOUND_BUT_RECURSIVE_LOCK)) {
+        if ((tCheckResult == IR_CODE_NOT_FOUND) || (tCheckResult == FOUND_BUT_RECURSIVE_LOCK))
+        {
             // IR command not found in mapping or received a recursive (while just running another one) regular command -> request stop
 #ifdef INFO
             Serial.println(F("Invalid or recursive regular command received -> set stop"));
@@ -276,19 +318,24 @@ bool IRCommandDispatcher::checkIRInputForAlwaysExecutableCommand() {
  * Special delay function for the IRCommandDispatcher.
  * @return  true - if stop received
  */
-bool IRCommandDispatcher::delayAndCheckForIRCommand(uint16_t aDelayMillis) {
+bool IRCommandDispatcher::delayAndCheckForIRCommand(uint16_t aDelayMillis)
+{
     uint32_t tStartMillis = millis();
 
-    do {
-        if (IRDispatcher.checkIRInputForAlwaysExecutableCommand()) {
+    do
+    {
+        if (IRDispatcher.checkIRInputForAlwaysExecutableCommand())
+        {
             return true;
         }
 
-    } while (millis() - tStartMillis < aDelayMillis);
+    }
+    while (millis() - tStartMillis < aDelayMillis);
     return false;
 }
 
-void IRCommandDispatcher::printIRCommandString() {
+void IRCommandDispatcher::printIRCommandString()
+{
 #ifdef INFO
     Serial.print(F("IRCommand="));
     for (uint8_t i = 0; i < sizeof(IRMapping) / sizeof(struct IRToCommandMapping); ++i) {

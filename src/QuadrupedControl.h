@@ -19,6 +19,9 @@
 
 #if defined(QUADRUPED_HAS_IR_CONTROL)
 #define IR_RECEIVER_PIN  A0
+//#define PCINT_PIN 8
+//#define PCINT_ENABLE_PORT0
+//#define PCINT_ENABLE_MANUAL
 #endif
 
 #if defined(QUADRUPED_HAS_US_DISTANCE)

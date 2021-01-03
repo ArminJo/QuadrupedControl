@@ -235,7 +235,7 @@ void __attribute__((weak)) doTrot() {
 }
 
 /*
- * Set servo positions and speeds needed to moveCreep forward one step
+ * Set servo positions and speeds required to moveCreep forward one step
  * Start with move to Y position with right legs together
  */
 void __attribute__((weak)) doCreepForward() {
@@ -491,7 +491,7 @@ void signalLeg(uint8_t aPivotServoIndex) {
 
 #if defined(QUADRUPED_HAS_IR_CONTROL) && !defined(USE_USER_DEFINED_MOVEMENTS)
 /*
- * include needed only for doCalibration
+ * include required only for doCalibration
  */
 #include "IRCommandMapping.h" // for COMMAND_*
 

@@ -38,6 +38,8 @@
 
 #if defined(QUADRUPED_HAS_IR_CONTROL)
 #define USE_IRL_REMOTE_LIBRARY // must be specified before including IRCommandDispatcher.cpp.h to define which IR library to use
+//#define USE_TINY_IR_RECEIVER // must be specified before including IRCommandDispatcher.cpp.h to define which IR library to use
+
 #include "IRCommandMapping.h" // must be included before IRCommandDispatcher.cpp.h to define IR_ADDRESS and IRMapping and string "unknown".
 #include "IRCommandDispatcher.cpp.h"
 #endif
@@ -261,17 +263,17 @@ void handleUSSensor() {
 }
 
 void doUSRight() {
-    if (!IRDispatcher.currentCommandIsRepeat && USServo.getCurrentAngle() > 15) {
+    if (!IRDispatcher.IRReceivedData.isRepeat && USServo.getCurrentAngle() > 15) {
         USServo.write(USServo.getCurrentAngle() - 15);
     }
 }
 void doUSLeft() {
-    if (!IRDispatcher.currentCommandIsRepeat && USServo.getCurrentAngle() < 165) {
+    if (!IRDispatcher.IRReceivedData.isRepeat && USServo.getCurrentAngle() < 165) {
         USServo.write(USServo.getCurrentAngle() + 15);
     }
 }
 void doUSScan() {
-    if (!IRDispatcher.currentCommandIsRepeat) {
+    if (!IRDispatcher.IRReceivedData.isRepeat) {
         USServo.write(90);
     }
 }

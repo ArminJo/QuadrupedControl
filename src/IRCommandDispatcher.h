@@ -35,8 +35,8 @@ struct IRToCommandMapping {
     const char * CommandString;
 };
 
-struct IRData {
-    uint8_t protocol;   // not used but useful for compatibility to IRMP
+struct IRDataForCommandDispatcherStruct {
+//    uint8_t protocol;   // not used but useful for compatibility to IRMP
     uint16_t address;   // to distinguish between multiple senders
     uint16_t command;
     bool isRepeat;
@@ -81,7 +81,7 @@ public:
      */
     bool requestToStopReceived;
 
-    struct IRData IRReceivedData;
+    struct IRDataForCommandDispatcherStruct IRReceivedData;
     unsigned long lastIRCodeMillis = 0;                 // millis() of last IR command received - for timeouts etc.
 
     /*

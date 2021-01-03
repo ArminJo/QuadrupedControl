@@ -43,8 +43,8 @@
 #define IR_LEFT  0x08
 #define IR_OK    0x1C
 
-#define IR_1    0x46
-#define IR_2    0x45
+#define IR_1    0x45
+#define IR_2    0x46
 #define IR_3    0x47
 #define IR_4    0x44
 #define IR_5    0x40
