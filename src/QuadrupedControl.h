@@ -10,18 +10,15 @@
 
 #include <stdint.h>
 
-//#define INFO // comment this out to see serial info output
+//#define INFO // activate this to see serial info output
 
 //#define QUADRUPED_HAS_IR_CONTROL
 //#define QUADRUPED_HAS_NEOPIXEL
 //#define QUADRUPED_HAS_US_DISTANCE
 //#define QUADRUPED_PLAYS_RTTTL
 
-#if defined(QUADRUPED_HAS_IR_CONTROL)
+#if defined(QUADRUPED_HAS_IR_CONTROL) && !defined(IR_RECEIVER_PIN)
 #define IR_RECEIVER_PIN  A0
-//#define PCINT_PIN 8
-//#define PCINT_ENABLE_PORT0
-//#define PCINT_ENABLE_MANUAL
 #endif
 
 #if defined(QUADRUPED_HAS_US_DISTANCE)

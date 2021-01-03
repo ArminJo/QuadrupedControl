@@ -41,7 +41,7 @@
 #include "QuadrupedServoControl.h"
 #include "QuadrupedMovements.h"  // for sMovingDirection
 
-//#define INFO // comment this out to see serial info output
+//#define INFO // activate this to see serial info output
 
 void QuadrupedOnPatternCompleteHandler(NeoPatterns *aLedsPtr);
 bool sCleanPatternAfterEnd;

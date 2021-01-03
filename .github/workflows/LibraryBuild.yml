@@ -17,7 +17,7 @@ jobs:
 
     env:
       # Comma separated list without double quotes around the list.
-      REQUIRED_LIBRARIES: Servo,ServoEasing,PinChangeInterrupt,IRLremote,NeoPatterns,Adafruit NeoPixel,PlayRtttl
+      REQUIRED_LIBRARIES: Servo,ServoEasing,IRMP,NeoPatterns,Adafruit NeoPixel,PlayRtttl
 
     strategy:
       matrix:
