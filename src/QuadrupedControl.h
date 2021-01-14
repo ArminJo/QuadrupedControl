@@ -18,7 +18,7 @@
 //#define QUADRUPED_PLAYS_RTTTL
 
 #if defined(QUADRUPED_HAS_IR_CONTROL) && !defined(IR_RECEIVER_PIN)
-#define IR_RECEIVER_PIN  A0
+#define IR_INPUT_PIN  A0
 #endif
 
 #if defined(QUADRUPED_HAS_US_DISTANCE)

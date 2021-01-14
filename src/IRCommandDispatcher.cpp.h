@@ -11,6 +11,7 @@
  *
  *  This file is part of ServoEasing https://github.com/ArminJo/ServoEasing.
  *  This file is part of IRMP https://github.com/ukw100/IRMP.
+ *  This file is part of Arduino-IRremote https://github.com/z3t0/Arduino-IRremote.
  *
  *  ServoEasing is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -41,7 +42,6 @@
 IRCommandDispatcher IRDispatcher;
 
 #if defined(USE_TINY_IR_RECEIVER)
-#define IR_INPUT_PIN IR_RECEIVER_PIN
 #include "TinyIRReceiver.cpp.h"
 
 void IRCommandDispatcher::init() {
@@ -52,9 +52,9 @@ void IRCommandDispatcher::init() {
  * This is the function is called if a complete command was received
  */
 #if defined(ESP8266)
-void ICACHE_RAM_ATTR handleReceivedTinyIRData(uint16_t aAddress, uint8_t aCommand, bool isRepetition)
+void ICACHE_RAM_ATTR handleReceivedTinyIRData(uint16_t aAddress, uint8_t aCommand, bool isRepeat)
 #elif defined(ESP32)
-void IRAM_ATTR handleReceivedTinyIRData(uint16_t aAddress, uint8_t aCommand, bool isRepetition)
+void IRAM_ATTR handleReceivedTinyIRData(uint16_t aAddress, uint8_t aCommand, bool isRepeat)
 #else
 void handleReceivedTinyIRData(uint16_t aAddress, uint8_t aCommand, bool isRepeat)
 #endif
@@ -167,7 +167,7 @@ uint8_t IRCommandDispatcher::checkAndCallCommand() {
         return IR_CODE_EMPTY;
     }
 
-    for (uint8_t i = 0; i < sizeof(IRMapping) / sizeof(struct IRToCommandMapping); ++i) {
+    for (uint8_t i = 0; i < sizeof(IRMapping) / sizeof(struct IRToCommandMappingStruct); ++i) {
         if (IRReceivedData.command == IRMapping[i].IRCode) {
 
 #ifdef INFO
@@ -290,7 +290,7 @@ bool IRCommandDispatcher::delayAndCheckForIRCommand(uint16_t aDelayMillis) {
 void IRCommandDispatcher::printIRCommandString() {
 #ifdef INFO
     Serial.print(F("IRCommand="));
-    for (uint8_t i = 0; i < sizeof(IRMapping) / sizeof(struct IRToCommandMapping); ++i) {
+    for (uint8_t i = 0; i < sizeof(IRMapping) / sizeof(struct IRToCommandMappingStruct); ++i) {
         if (IRReceivedData.command == IRMapping[i].IRCode) {
             Serial.println(reinterpret_cast<const __FlashStringHelper*>(IRMapping[i].CommandString));
             return;
