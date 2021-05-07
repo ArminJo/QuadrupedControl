@@ -38,10 +38,10 @@
 
 #if defined(QUADRUPED_HAS_IR_CONTROL)
 // saves around 800 bytes program space
-#define USE_TINY_IR_RECEIVER // must be specified before including IRCommandDispatcher.cpp.h to define which IR library to use
+#define USE_TINY_IR_RECEIVER // must be specified before including IRCommandDispatcher.hpp to define which IR library to use
 
-#include "IRCommandMapping.h" // must be included before IRCommandDispatcher.cpp.h to define IR_ADDRESS and IRMapping and string "unknown".
-#include "IRCommandDispatcher.cpp.h"
+#include "IRCommandMapping.h" // must be included before IRCommandDispatcher.hpp to define IR_ADDRESS and IRMapping and string "unknown".
+#include "IRCommandDispatcher.hpp"
 #endif
 
 #include "QuadrupedServoControl.h"
@@ -78,8 +78,8 @@ COLOR32_YELLOW, COLOR32_YELLOW, COLOR32_GREEN_QUARTER, COLOR32_GREEN_QUARTER, CO
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
     Serial.begin(115200);
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
-    delay(2000); // To be able to connect Serial monitor after reset and before first printout
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)  || defined(ARDUINO_attiny3217)
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #endif
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
@@ -93,8 +93,7 @@ void setup() {
 #if defined(QUADRUPED_HAS_US_DISTANCE)
     Serial.println(F("Init US distance sensor"));
     initUSDistancePins(PIN_TRIGGER_OUT, PIN_ECHO_IN);
-    USServo.attach(PIN_US_SERVO);
-    USServo.write(90); // start value
+    USServo.attach(PIN_US_SERVO, 90);
 #endif
 
     /*
