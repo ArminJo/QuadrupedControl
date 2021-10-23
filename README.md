@@ -24,8 +24,9 @@ Modify it by commenting them out or in, or change the values if applicable. Or d
 | `QUADRUPED_HAS_IR_CONTROL` | disabled | QuadrupedControl.h | IR remote control is enabled. |
 | `IR_RECEIVER_PIN` | A0 | QuadrupedControl.h | Pin for IR remote control sensor. |
 | `QUADRUPED_HAS_NEOPIXEL` | disabled | QuadrupedControl.h | Neopixel animations on a 24 pieces Neopixel strip handled logically as 3 8 pieces strips is enabled. |
-| `QUADRUPED_HAS_US_DISTANCE` | disabled | QuadrupedControl.h | US distance sensor at pin A3 + A4 and a pan servo at pin 13 are enabled. The distance can be displayed on the middle/front 8 pieces of the Neopixel strips |
-| `QUADRUPED_PLAYS_RTTTL` | disabled | QuadrupedControl.h | The Quadruped play a melody. |
+| `QUADRUPED_HAS_US_DISTANCE` | disabled | QuadrupedControl.h | US distance sensor at pin A3 + A4 is enabled. The distance is displayed on the middle/front 8 pieces of the Neopixel strips. |
+| `QUADRUPED_HAS_US_DISTANCE_SERVO` | disabled | QuadrupedControl.h | A pan servo at pin 13 for the US distance sensor is enabled. |
+| `QUADRUPED_PLAYS_RTTTL` | disabled | QuadrupedControl.h | The Quadruped plays a melody at startup. |
 
 # Modifying compile options
 ### Modifying compile options with Arduino IDE

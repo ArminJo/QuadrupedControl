@@ -11,6 +11,8 @@
 #define COMMANDS_H_
 
 #include "QuadrupedControl.h"  //must be first
+
+// Definition of RETURN_IF_STOP macro
 #if defined(QUADRUPED_HAS_IR_CONTROL)
 #include "IRCommandDispatcher.h" // RETURN_IF_STOP is defined here
 #else
@@ -32,8 +34,8 @@
 #define ACTION_TYPE_DANCE   8
 #define ACTION_TYPE_TEST    9
 #define ACTION_TYPE_AUTO_MOVE   10
-extern uint8_t sActionType; // must be set by exclusive commands and is reset if sRequestToStopReceived is set
-extern uint8_t sLastActionType; // do determine changes of actionType
+extern uint8_t sActionTypeForNeopatternsDisplay; // A change on this action type triggers the generation of new neopatterns
+extern uint8_t sLastActionTypeForNeopatternsDisplay; // do determine changes of sActionTypeForNeopatternsDisplay
 
 // The code for the called command is available in variable sCurrentIRCode
 // All functions have the prefix __attribute__((weak)) in order to enable easy overwriting with own functions.

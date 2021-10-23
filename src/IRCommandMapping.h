@@ -1,41 +1,38 @@
 /*
  * IRCommandMapping.h
  *
- * IR remote button codes, strings, and functions to call
+ * IR remote button codes, strings, and functions to call for quadruped IR control
  *
- *  Created on: 08.03.2019
- *      Author: Armin
+ *  Copyright (C) 2019-2021  Armin Joachimsmeyer
+ *  armin.joachimsmeyer@gmail.com
  *
  * Mapping for controlling a mePed Robot V2 with 8 servos using an IR Remote at pin A0
  * Supported IR remote are KEYES (the original mePed remote) and WM10 and ...
  * Select the one you have below.
-  */
+ */
 
-#ifndef IR_COMMAND_MAPING_H_
-#define IR_COMMAND_MAPING_H_
+#ifndef IR_COMMAND_MAPPING_H_
+#define IR_COMMAND_MAPPING_H_
 
 #include <Arduino.h>
-#include "Commands.h" // includes all the commands used in the mapping arrays below
+//#include "Commands.h" // include for all the commands used in the mapping arrays below
 
 /*
  * !!! Choose your remote !!!
  */
 //#define USE_KEYES_REMOTE_CLONE With number pad and direction control switched, will be taken as default
 //#define USE_KEYES_REMOTE // The mePed 2 Standard remote
+//#define USE_LAFVIN_REMOTE // Another name (printed on the remote) for the mePed 2 Standard remote
 //#define USE_WM10_REMOTE
 //#define USE_WHITE_DVD_REMOTE
-#if !defined(USE_KEYES_REMOTE) && !defined(USE_WM10_REMOTE) && !defined(USE_KEYES_REMOTE_CLONE) && !defined(USE_WHITE_DVD_REMOTE)
+#if !defined(USE_KEYES_REMOTE) && !defined(USE_LAFVIN_REMOTE) && !defined(USE_WM10_REMOTE) && !defined(USE_KEYES_REMOTE_CLONE) && !defined(USE_WHITE_DVD_REMOTE)
 #define USE_KEYES_REMOTE_CLONE // the one you can buy at aliexpress
-#endif
-
-#if (defined(USE_KEYES_REMOTE) && defined(USE_WM10_REMOTE)) || (defined(USE_KEYES_REMOTE) && defined(USE_KEYES_REMOTE_CLONE))
-#error "Please choose only one remote for compile"
 #endif
 
 #ifdef USE_KEYES_REMOTE_CLONE
 #define IR_REMOTE_NAME "KEYES_CLONE"
 // Codes for the KEYES CLONE remote control with 17 Keys with keypad above direction control
-#define IR_ADDRESS 0xFF00
+#define IR_ADDRESS 0x00
 
 #define IR_UP    0x18
 #define IR_DOWN  0x52
@@ -86,14 +83,17 @@
 #define COMMAND_DOWN        IR_DOWN
 #endif
 
-#ifdef USE_KEYES_REMOTE
+#if defined(USE_KEYES_REMOTE) || defined(USE_LAFVIN_REMOTE)
+#if defined(IR_REMOTE_NAME)
+#error "Please choose only one remote for compile"
+#endif
 #define IR_REMOTE_NAME "KEYES"
 /*
  * FIRST:
  * IR code to button mapping for better reading. IR codes should only referenced here.
  */
 // Codes for the KEYES remote control with 17 Keys
-#define IR_ADDRESS 0xFF00
+#define IR_ADDRESS 0x00
 
 #define IR_UP    0x46
 #define IR_DOWN  0x15
@@ -146,13 +146,16 @@
 #endif
 
 #ifdef USE_WM10_REMOTE
+#if defined(IR_REMOTE_NAME)
+#error "Please choose only one remote for compile"
+#endif
 #define IR_REMOTE_NAME "WM10"
 /*
  * FIRST:
  * IR code to button mapping for better reading. IR codes should only referenced here.
  */
 // Codes for the WM010 remote control with 14 Keys
-#define IR_ADDRESS 0xF708
+#define IR_ADDRESS 0x08
 
 #define IR_UP  0x4
 #define IR_DOWN 0x51
@@ -205,6 +208,9 @@
 #endif
 
 #ifdef USE_WHITE_DVD_REMOTE
+#if defined(IR_REMOTE_NAME)
+#error "Please choose only one remote for compile"
+#endif
 #define IR_REMOTE_NAME "WHITE_DVD"
 #define HAS_ADDITIONAL_REMOTE_COMMANDS
 
@@ -334,49 +340,53 @@ static const char unknown[] PROGMEM ="unknown";
  * Main mapping array of commands to C functions and command strings
  */
 const struct IRToCommandMappingStruct IRMapping[] = { {
-COMMAND_DANCE, IR_COMMAND_FLAG_REGULAR, &doDance, dance }, {
-COMMAND_TWIST, IR_COMMAND_FLAG_REGULAR, &doTwist, twist }, {
-COMMAND_WAVE, IR_COMMAND_FLAG_REGULAR, &doWave, wave }, {
-COMMAND_TROT, IR_COMMAND_FLAG_REGULAR, &doTrot, trot }, {
-COMMAND_AUTO, IR_COMMAND_FLAG_REGULAR, &doQuadrupedAutoMove, autoMove }, {
-COMMAND_TEST, IR_COMMAND_FLAG_REGULAR, &doTest, test }, {
-COMMAND_CENTER, IR_COMMAND_FLAG_REGULAR, &doCenterServos, center }, {
+COMMAND_DANCE, IR_COMMAND_FLAG_BLOCKING, &doDance, dance }, {
+COMMAND_TWIST, IR_COMMAND_FLAG_BLOCKING, &doTwist, twist }, {
+COMMAND_WAVE, IR_COMMAND_FLAG_BLOCKING, &doWave, wave }, {
+COMMAND_TROT, IR_COMMAND_FLAG_BLOCKING, &doTrot, trot }, {
+COMMAND_AUTO, IR_COMMAND_FLAG_BLOCKING, &doQuadrupedAutoMove, autoMove }, {
+COMMAND_TEST, IR_COMMAND_FLAG_BLOCKING, &doTest, test }, {
+COMMAND_CENTER, IR_COMMAND_FLAG_BLOCKING, &doCenterServos, center }, {
 #if defined(QUADRUPED_HAS_IR_CONTROL) && !defined(USE_USER_DEFINED_MOVEMENTS)
-        COMMAND_CALIBRATE, IR_COMMAND_FLAG_REGULAR, &doCalibration, calibration }, {
+        COMMAND_CALIBRATE, IR_COMMAND_FLAG_BLOCKING, &doCalibration, calibration }, {
 #endif
+
         /*
          * Short commands, which can be executed always, set directions
          */
-        COMMAND_FORWARD, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &doSetDirectionForward, dirForward }, {
-COMMAND_BACKWARD, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &doSetDirectionBack, dirBack }, {
-COMMAND_RIGHT, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &doSetDirectionRight, dirRight }, {
-COMMAND_LEFT, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &doSetDirectionLeft, dirLeft }, {
+        COMMAND_FORWARD, IR_COMMAND_FLAG_BLOCKING, &doSetDirectionForward, dirForward }, {
+COMMAND_BACKWARD, IR_COMMAND_FLAG_BLOCKING, &doSetDirectionBack, dirBack }, {
+COMMAND_RIGHT, IR_COMMAND_FLAG_BLOCKING, &doSetDirectionRight, dirRight }, {
+COMMAND_LEFT, IR_COMMAND_FLAG_BLOCKING, &doSetDirectionLeft, dirLeft }, {
 /*
  * Repeatable short commands
  */
-COMMAND_INCREASE_SPEED, IR_COMMAND_FLAG_REPEATABLE_EXECUTE_ALWAYS, &doIncreaseSpeed, increaseSpeed }, {
-COMMAND_DECREASE_SPEED, IR_COMMAND_FLAG_REPEATABLE_EXECUTE_ALWAYS, &doDecreaseSpeed, decreaseSpeed }, {
-COMMAND_INCREASE_HEIGHT, IR_COMMAND_FLAG_REPEATABLE_EXECUTE_ALWAYS, &doIncreaseHeight, increaseHeight }, {
-COMMAND_DECREASE_HEIGHT, IR_COMMAND_FLAG_REPEATABLE_EXECUTE_ALWAYS, &doDecreaseHeight, decreaseHeight }, {
+COMMAND_INCREASE_SPEED, IR_COMMAND_FLAG_REPEATABLE_NON_BLOCKING, &doIncreaseSpeed, increaseSpeed }, {
+COMMAND_DECREASE_SPEED, IR_COMMAND_FLAG_REPEATABLE_NON_BLOCKING, &doDecreaseSpeed, decreaseSpeed }, {
+COMMAND_INCREASE_HEIGHT, IR_COMMAND_FLAG_REPEATABLE_NON_BLOCKING, &doIncreaseHeight, increaseHeight }, {
+COMMAND_DECREASE_HEIGHT, IR_COMMAND_FLAG_REPEATABLE_NON_BLOCKING, &doDecreaseHeight, decreaseHeight }, {
 COMMAND_STOP, IR_COMMAND_FLAG_IS_STOP_COMMAND, &doStop, stop }
 
 #ifdef HAS_ADDITIONAL_REMOTE_COMMANDS
         /*
          * Commands not accessible by simple remote because of lack of keys
          */
-        , { COMMAND_US_RIGHT, IR_COMMAND_FLAG_REPEATABLE_EXECUTE_ALWAYS, &doUSRight, ultrasonicServoRight }, {
-        COMMAND_US_LEFT, IR_COMMAND_FLAG_REPEATABLE_EXECUTE_ALWAYS, &doUSLeft, ultrasonicServoLeft }, {
-        COMMAND_US_SCAN, IR_COMMAND_FLAG_REPEATABLE_EXECUTE_ALWAYS, &doUSScan, ultrasonicServoScan }, {
-        COMMAND_PATTERN_1, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &doPattern1, pattern }, {
-        COMMAND_PATTERN_2, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &doPattern2, pattern }, {
-        COMMAND_PATTERN_3, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &doPattern3, pattern }, {
-        COMMAND_PATTERN_HEARTBEAT, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &doPatternHeartbeat, pattern }, {
-        COMMAND_PATTERN_FIRE, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &doPatternFire, pattern }, {
-        COMMAND_PATTERN_WIPE, IR_COMMAND_FLAG_EXECUTE_ALWAYS, &wipeOutPatterns, pattern }
+#if defined(QUADRUPED_HAS_US_DISTANCE_SERVO)
+        , { COMMAND_US_RIGHT, IR_COMMAND_FLAG_REPEATABLE_NON_BLOCKING, &doUSRight, ultrasonicServoRight }, {
+        COMMAND_US_LEFT, IR_COMMAND_FLAG_REPEATABLE_NON_BLOCKING, &doUSLeft, ultrasonicServoLeft }, {
+        COMMAND_US_SCAN, IR_COMMAND_FLAG_REPEATABLE_NON_BLOCKING, &doUSScan, ultrasonicServoScan }
+#endif
+        , {
+        COMMAND_PATTERN_1, IR_COMMAND_FLAG_NON_BLOCKING, &doPattern1, pattern }, {
+        COMMAND_PATTERN_2, IR_COMMAND_FLAG_NON_BLOCKING, &doPattern2, pattern }, {
+        COMMAND_PATTERN_3, IR_COMMAND_FLAG_NON_BLOCKING, &doPattern3, pattern }, {
+        COMMAND_PATTERN_HEARTBEAT, IR_COMMAND_FLAG_NON_BLOCKING, &doPatternHeartbeat, pattern }, {
+        COMMAND_PATTERN_FIRE, IR_COMMAND_FLAG_NON_BLOCKING, &doPatternFire, pattern }, {
+        COMMAND_PATTERN_WIPE, IR_COMMAND_FLAG_NON_BLOCKING, &wipeOutPatterns, pattern }
 
 #endif
         };
 
-#endif /* IR_COMMAND_MAPING_H_ */
+#endif /* IR_COMMAND_MAPPING_H_ */
 
 #pragma once

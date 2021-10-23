@@ -12,7 +12,7 @@
 
 #include <stdint.h>
 
-extern uint8_t sMovingDirection;
+extern volatile uint8_t sMovingDirection;
 
 /*
  * Movements

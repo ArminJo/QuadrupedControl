@@ -25,7 +25,6 @@
 
 #include <Arduino.h>
 
-// Better define it globally (not possible for the Arduino IDE). For Sloeber, do insert -DUSE_USER_DEFINED_MOVEMENTS in:  Properties / Arduino/ Compile Options / append to C++
 //#define USE_USER_DEFINED_MOVEMENTS
 #if defined(USE_USER_DEFINED_MOVEMENTS)
 #include "QuadrupedControl.h"

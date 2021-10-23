@@ -4,8 +4,8 @@
  * This file mainly contains the control of the attached 3 NeoPixel 8 pixel bars.
  * These 3 bars are chained, in order to use only one pin, and are electrically one 24 pixel bar.
  *
- * The NeopPixel updates are synchronized with the ServoEasing updates
- * by overwriting the ServoEasing function handleServoTimerInterrupt()/handleQuadrupedNeoPixelUpdate() in order not to interfere with the servo pulse generation.
+ * The NeopPixel updates are synchronized with the ServoEasing updates by overwriting the ServoEasing
+ * function handleServoTimerInterrupt()->handleQuadrupedNeoPixelUpdate() in order not to interfere with the servo pulse generation.
  *
  * New automatic movement patterns are triggered by the flag sStartOrChangeNeoPatterns which is evaluated in handleQuadrupedNeoPixelUpdate() in ISR context.
  *
@@ -36,6 +36,7 @@
 
 #if defined(QUADRUPED_HAS_IR_CONTROL)
 #include "IRCommandDispatcher.h"
+#include "TinyIRReceiver.h" // for isTinyReceiverIdle()
 #endif
 
 #include "QuadrupedServoControl.h"
@@ -45,7 +46,6 @@
 
 void QuadrupedOnPatternCompleteHandler(NeoPatterns *aLedsPtr);
 bool sCleanPatternAfterEnd;
-bool sStartOrChangeNeoPatterns; // Flag set e.g. by main loop after calling a main command. Flag is read by ISR, to check for new patterns.
 bool sCallShowSynchronized; // Flag set e.g. by main loop to show the pattern synchronized (with servos).
 
 NeoPatterns QuadrupedNeoPixelBar = NeoPatterns(NUM_PIXELS, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800, &QuadrupedOnPatternCompleteHandler,
@@ -60,7 +60,7 @@ NeoPatterns LeftNeoPixelBar = NeoPatterns(&QuadrupedNeoPixelBar, PIXEL_OFFSET_LE
 
 uint16_t getDelayFromSpeed() {
     uint16_t tDelay = 12000 / sServoSpeed;
-#ifdef INFO
+#ifdef DEBUG
     Serial.print(F("Speed="));
     Serial.print(sServoSpeed);
     Serial.print(F(" Delay="));
@@ -167,47 +167,27 @@ void handleServoTimerInterrupt() {
  */
 void handleQuadrupedNeoPixelUpdate() {
 
-    /*
-     * Check for patterns start or update.
-     */
-    if (sLastActionType != sActionType) {
-        sLastActionType = sActionType;
-        handleAutomaticMovementPattern(); // To trigger NeoPatterns generation
-    }
-
-#if VERSION_NEOPATTERNS_NUMERICAL >= 220
-    if (!QuadrupedNeoPixelBar.updateAllPartialPatterns()) {
-        if (sCallShowSynchronized) {
-            // show anyway
-            QuadrupedNeoPixelBar.show();
-        }
-    }
-    sCallShowSynchronized = false;
-
-#else
-    bool tNeedShow = sCallShowSynchronized;
-    if (tNeedShow) {
-        sCallShowSynchronized = false;
-    }
-
-    if (RightNeoPixelBar.ActivePattern != PATTERN_NONE) {
-        tNeedShow |= RightNeoPixelBar.update();
-    }
-    if (FrontNeoPixelBar.ActivePattern != PATTERN_NONE) {
-        tNeedShow |= FrontNeoPixelBar.update();
-    }
-    if (LeftNeoPixelBar.ActivePattern != PATTERN_NONE) {
-        tNeedShow |= LeftNeoPixelBar.update();
-    }
-    if (QuadrupedNeoPixelBar.ActivePattern != PATTERN_NONE) {
-        // One pattern for all 3 bars here
-        QuadrupedNeoPixelBar.update();
-    } else if (tNeedShow) {
-        QuadrupedNeoPixelBar.show();
-    }
-
+#if defined(QUADRUPED_HAS_IR_CONTROL)
+    if (isTinyReceiverIdle()) {
 #endif
+        /*
+         * Check for patterns start or update.
+         */
+        if (sLastActionTypeForNeopatternsDisplay != sActionTypeForNeopatternsDisplay) {
+            sLastActionTypeForNeopatternsDisplay = sActionTypeForNeopatternsDisplay;
+            handleAutomaticMovementPattern(); // To trigger NeoPatterns generation
+        }
 
+        if (!QuadrupedNeoPixelBar.updateAllPartialPatterns()) {
+            if (sCallShowSynchronized) {
+                // show anyway
+                QuadrupedNeoPixelBar.show();
+            }
+        }
+        sCallShowSynchronized = false;
+#if defined(QUADRUPED_HAS_IR_CONTROL)
+    }
+#endif
 }
 
 /*
@@ -216,18 +196,18 @@ void handleQuadrupedNeoPixelUpdate() {
 void handleAutomaticMovementPattern() {
 #ifdef INFO
     Serial.print(F("Current action="));
-    Serial.print(sActionType);
+    Serial.print(sActionTypeForNeopatternsDisplay);
     Serial.print(" -> ");
 #endif
-    if (sActionType == ACTION_TYPE_STOP) {
+    if (sActionTypeForNeopatternsDisplay == ACTION_TYPE_STOP) {
 #ifdef INFO
         Serial.println(F("No new pattern"));
 #endif
     } else {
         /*
-         * Action ongoing. Start or restart pattern according to sActionType and other parameter.
+         * Action ongoing. Start or restart pattern according to sActionTypeForNeopatternsDisplay and other parameter.
          */
-        switch (sActionType) {
+        switch (sActionTypeForNeopatternsDisplay) {
         case ACTION_TYPE_CREEP:
 #ifdef INFO
             Serial.println(F("Starting ColorWipe"));
@@ -278,7 +258,7 @@ void handleAutomaticMovementPattern() {
  * The completion callback for each pattern
  */
 void QuadrupedOnPatternCompleteHandler(NeoPatterns *aLedsPtr) {
-#ifdef INFO
+#ifdef DEBUG
     Serial.print(F("Offset="));
     Serial.print(aLedsPtr->PixelOffset);
     Serial.print(F(" Pattern \""));
