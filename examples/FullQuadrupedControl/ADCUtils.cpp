@@ -32,7 +32,7 @@ union WordUnionForADCUtils {
     struct {
         uint8_t LowByte;
         uint8_t HighByte;
-    } byte;
+    } UByte;
     uint16_t UWord;
     int16_t Word;
     uint8_t *BytePointer;
@@ -53,8 +53,8 @@ uint16_t readADCChannel(uint8_t aChannelNumber) {
     loop_until_bit_is_clear(ADCSRA, ADSC);
 
     // Get value
-    tUValue.byte.LowByte = ADCL;
-    tUValue.byte.HighByte = ADCH;
+    tUValue.UByte.LowByte = ADCL;
+    tUValue.UByte.HighByte = ADCH;
     return tUValue.UWord;
     //    return ADCL | (ADCH <<8); // needs 4 bytes more
 }
@@ -74,8 +74,8 @@ uint16_t readADCChannelWithReference(uint8_t aChannelNumber, uint8_t aReference)
     loop_until_bit_is_clear(ADCSRA, ADSC);
 
     // Get value
-    tUValue.byte.LowByte = ADCL;
-    tUValue.byte.HighByte = ADCH;
+    tUValue.UByte.LowByte = ADCL;
+    tUValue.UByte.HighByte = ADCH;
     return tUValue.UWord;
 }
 

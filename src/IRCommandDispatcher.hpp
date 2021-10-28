@@ -262,7 +262,7 @@ void IRCommandDispatcher::checkAndCallCommand(bool aCallAlsoBlockingCommands) {
             }
             break; // command found
         }
-    }
+    } // for loop
     return;
 }
 
