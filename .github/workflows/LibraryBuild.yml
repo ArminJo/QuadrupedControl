@@ -7,7 +7,23 @@
 
 # This is the name of the workflow, visible on GitHub UI.
 name: LibraryBuild
-on: [push, pull_request] # see: https://help.github.com/en/actions/reference/events-that-trigger-workflows#pull-request-event-pull_request
+on:
+  workflow_dispatch: # To run it manually
+    description: 'manual build check'
+  push: # see: https://help.github.com/en/actions/reference/events-that-trigger-workflows#pull-request-event-pull_request
+    paths:
+    - '**.ino'
+    - '**.cpp'
+    - '**.h'
+    - '**.hpp'
+    - '**LibraryBuild.yml'
+  pull_request:
+    paths:
+    - '**.ino'
+    - '**.cpp'
+    - '**.h'
+    - '**.hpp'
+    - '**LibraryBuild.yml'
 
 jobs:
   build:
@@ -40,12 +56,7 @@ jobs:
         include:
           - arduino-boards-fqbn: arduino:avr:uno|AllFeatures
             build-properties:
-              FullQuadrupedControl:
-                -DINFO
-                -DQUADRUPED_HAS_IR_CONTROL
-                -DQUADRUPED_HAS_NEOPIXEL
-                -DQUADRUPED_HAS_US_DISTANCE
-                -DQUADRUPED_PLAYS_RTTTL
+              QuadrupedControl: -DQUADRUPED_1_WITH_DVD_REMOTE
 
       # Do not cancel all jobs / architectures if one job fails
       fail-fast: false

@@ -8,7 +8,7 @@
 #ifndef QUADRUPED_NEOPIXEL_H_
 #define QUADRUPED_NEOPIXEL_H_
 
-#include "NeoPatterns.h" // Click here to get the library: http://librarymanager/All#NeoPatterns
+#include <NeoPatterns.h>
 
 #define PIN_NEOPIXEL    4
 // How many NeoPixels are mounted?
@@ -39,9 +39,9 @@ extern NeoPatterns QuadrupedNeoPixelBar; // The main 24 pixel bar containing all
 extern NeoPatterns RightNeoPixelBar;     // 8 Pixel bar at the right
 extern NeoPatterns FrontNeoPixelBar;
 extern NeoPatterns LeftNeoPixelBar;
+extern color32_t sBarBackgroundColorArrayForDistance[]; // // The color background for front distance bar
 
 extern bool sStartOrChangeNeoPatterns;
 
 #endif /* QUADRUPED_NEOPIXEL_H_ */
-
 #pragma once

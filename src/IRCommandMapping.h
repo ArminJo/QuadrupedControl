@@ -3,7 +3,7 @@
  *
  * IR remote button codes, strings, and functions to call for quadruped IR control
  *
- *  Copyright (C) 2019-2021  Armin Joachimsmeyer
+ *  Copyright (C) 2019-2022  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  * Mapping for controlling a mePed Robot V2 with 8 servos using an IR Remote at pin A0
@@ -15,16 +15,9 @@
 #define IR_COMMAND_MAPPING_H_
 
 #include <Arduino.h>
-//#include "Commands.h" // include for all the commands used in the mapping arrays below
 
-/*
- * !!! Choose your remote !!!
- */
-//#define USE_KEYES_REMOTE_CLONE With number pad and direction control switched, will be taken as default
-//#define USE_KEYES_REMOTE // The mePed 2 Standard remote
-//#define USE_LAFVIN_REMOTE // Another name (printed on the remote) for the mePed 2 Standard remote
-//#define USE_WM10_REMOTE
-//#define USE_WHITE_DVD_REMOTE
+#include "QuadrupedControlCommands.h" // contains the command definitions used in the mapping table below
+
 #if !defined(USE_KEYES_REMOTE) && !defined(USE_LAFVIN_REMOTE) && !defined(USE_WM10_REMOTE) && !defined(USE_KEYES_REMOTE_CLONE) && !defined(USE_WHITE_DVD_REMOTE)
 #define USE_KEYES_REMOTE_CLONE // the one you can buy at aliexpress
 #endif
@@ -304,67 +297,69 @@
  * Main mapping of commands to C functions
  */
 
-// IR strings of functions for output
-static const char beep[] PROGMEM ="beep";
-static const char forward[] PROGMEM ="forward";
+// IR strings of functions for output in alphabetical order
+static const char autoMove[] PROGMEM ="auto move";
 static const char back[] PROGMEM ="back";
-static const char enter[] PROGMEM ="enter";
+static const char beep[] PROGMEM ="beep";
+static const char calibration[] PROGMEM ="calibration";
 static const char center[] PROGMEM ="center";
-static const char right[] PROGMEM ="right";
-static const char left[] PROGMEM ="left";
+static const char dance[] PROGMEM ="dance";
 static const char dirForward[] PROGMEM ="dir forward";
 static const char dirBack[] PROGMEM ="dir back";
 static const char dirRight[] PROGMEM ="dir right";
 static const char dirLeft[] PROGMEM ="dir left";
-static const char increaseSpeed[] PROGMEM ="increase speed";
-static const char decreaseSpeed[] PROGMEM ="decrease speed";
-static const char increaseHeight[] PROGMEM ="increase height";
-static const char decreaseHeight[] PROGMEM ="decrease height";
-static const char wave[] PROGMEM ="wave";
-static const char calibration[] PROGMEM ="calibration";
-//static const char onOff[] PROGMEM ="on/off";
+static const char enter[] PROGMEM ="enter";
+static const char forward[] PROGMEM ="forward";
+static const char heighIncrease[] PROGMEM ="increase height";
+static const char heighDecrease[] PROGMEM ="decrease height";
+static const char left[] PROGMEM ="left";
+static const char myMove[] PROGMEM ="my move";
+static const char pattern[] PROGMEM ="NeoPattern";
+static const char right[] PROGMEM ="right";
+static const char speedIncrease[] PROGMEM ="increase speed";
+static const char speedDecrease[] PROGMEM ="decrease speed";
 static const char stop[] PROGMEM ="stop";
-static const char dance[] PROGMEM ="dance";
+static const char test[] PROGMEM ="test";
+//static const char onOff[] PROGMEM ="on/off";
 static const char trot[] PROGMEM ="trot";
 static const char twist[] PROGMEM ="twist";
-static const char autoMove[] PROGMEM ="auto move";
-static const char myMove[] PROGMEM ="my move";
 static const char ultrasonicServoLeft[] PROGMEM ="US servo left";
 static const char ultrasonicServoRight[] PROGMEM ="US servo right";
 static const char ultrasonicServoScan[] PROGMEM ="US servo scan";
-static const char test[] PROGMEM ="test";
-static const char pattern[] PROGMEM ="pattern";
 static const char unknown[] PROGMEM ="unknown";
+static const char wave[] PROGMEM ="wave";
 
 /*
  * Main mapping array of commands to C functions and command strings
  */
 const struct IRToCommandMappingStruct IRMapping[] = { {
+/*
+ * Commands, which must run exclusively and therefore must first stop other commands running.
+ */
 COMMAND_DANCE, IR_COMMAND_FLAG_BLOCKING, &doDance, dance }, {
 COMMAND_TWIST, IR_COMMAND_FLAG_BLOCKING, &doTwist, twist }, {
 COMMAND_WAVE, IR_COMMAND_FLAG_BLOCKING, &doWave, wave }, {
 COMMAND_TROT, IR_COMMAND_FLAG_BLOCKING, &doTrot, trot }, {
 COMMAND_AUTO, IR_COMMAND_FLAG_BLOCKING, &doQuadrupedAutoMove, autoMove }, {
 COMMAND_TEST, IR_COMMAND_FLAG_BLOCKING, &doTest, test }, {
-COMMAND_CENTER, IR_COMMAND_FLAG_BLOCKING, &doCenterServos, center }, {
 #if defined(QUADRUPED_HAS_IR_CONTROL) && !defined(USE_USER_DEFINED_MOVEMENTS)
         COMMAND_CALIBRATE, IR_COMMAND_FLAG_BLOCKING, &doCalibration, calibration }, {
 #endif
-
-        /*
-         * Short commands, which can be executed always, set directions
-         */
-        COMMAND_FORWARD, IR_COMMAND_FLAG_BLOCKING, &doSetDirectionForward, dirForward }, {
+        COMMAND_CENTER, IR_COMMAND_FLAG_BLOCKING, &doCenterServos, center }, {
+/*
+ * Set direction also starts the movement
+ */
+COMMAND_FORWARD, IR_COMMAND_FLAG_BLOCKING, &doSetDirectionForward, dirForward }, {
 COMMAND_BACKWARD, IR_COMMAND_FLAG_BLOCKING, &doSetDirectionBack, dirBack }, {
 COMMAND_RIGHT, IR_COMMAND_FLAG_BLOCKING, &doSetDirectionRight, dirRight }, {
 COMMAND_LEFT, IR_COMMAND_FLAG_BLOCKING, &doSetDirectionLeft, dirLeft }, {
 /*
- * Repeatable short commands
+ * Commands, which can be executed always, since the are short and repeats are allowed
  */
-COMMAND_INCREASE_SPEED, IR_COMMAND_FLAG_REPEATABLE_NON_BLOCKING, &doIncreaseSpeed, increaseSpeed }, {
-COMMAND_DECREASE_SPEED, IR_COMMAND_FLAG_REPEATABLE_NON_BLOCKING, &doDecreaseSpeed, decreaseSpeed }, {
-COMMAND_INCREASE_HEIGHT, IR_COMMAND_FLAG_REPEATABLE_NON_BLOCKING, &doIncreaseHeight, increaseHeight }, {
-COMMAND_DECREASE_HEIGHT, IR_COMMAND_FLAG_REPEATABLE_NON_BLOCKING, &doDecreaseHeight, decreaseHeight }, {
+COMMAND_INCREASE_SPEED, IR_COMMAND_FLAG_REPEATABLE_NON_BLOCKING, &doIncreaseSpeed, speedIncrease }, {
+COMMAND_DECREASE_SPEED, IR_COMMAND_FLAG_REPEATABLE_NON_BLOCKING, &doDecreaseSpeed, speedDecrease }, {
+COMMAND_INCREASE_HEIGHT, IR_COMMAND_FLAG_REPEATABLE_NON_BLOCKING, &doIncreaseHeight, heighIncrease }, {
+COMMAND_DECREASE_HEIGHT, IR_COMMAND_FLAG_REPEATABLE_NON_BLOCKING, &doDecreaseHeight, heighDecrease }, {
 COMMAND_STOP, IR_COMMAND_FLAG_IS_STOP_COMMAND, &doStop, stop }
 
 #ifdef HAS_ADDITIONAL_REMOTE_COMMANDS

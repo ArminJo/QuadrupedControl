@@ -9,12 +9,12 @@
  *
  * New automatic movement patterns are triggered by the flag sStartOrChangeNeoPatterns which is evaluated in handleQuadrupedNeoPixelUpdate() in ISR context.
  *
- *  Copyright (C) 2019  Armin Joachimsmeyer
+ *  Copyright (C) 2019-2022  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
- *  This file is part of ServoEasing https://github.com/ArminJo/QuadrupedControl.
+ *  This file is part of QuadrupedControl https://github.com/ArminJo/QuadrupedControl.
  *
- *  ServoEasing is free software: you can redistribute it and/or modify
+ *  QuadrupedControl is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
@@ -30,9 +30,12 @@
 
 #include <Arduino.h>
 
-#include "QuadrupedNeoPixel.h"
-#include "QuadrupedControl.h"
-#include "Commands.h"
+#include "QuadrupedConfiguration.h"
+#if defined(QUADRUPED_HAS_NEOPIXEL)
+
+#include "QuadrupedControlCommands.h"
+
+#include <NeoPatterns.hpp>
 
 #if defined(QUADRUPED_HAS_IR_CONTROL)
 #include "IRCommandDispatcher.h"
@@ -40,7 +43,7 @@
 #endif
 
 #include "QuadrupedServoControl.h"
-#include "QuadrupedMovements.h"  // for sMovingDirection
+#include "QuadrupedBasicMovements.h"  // for sMovingDirection
 
 //#define INFO // activate this to see serial info output
 
@@ -58,36 +61,60 @@ NeoPatterns FrontNeoPixelBar = NeoPatterns(&QuadrupedNeoPixelBar, PIXEL_OFFSET_F
 NeoPatterns LeftNeoPixelBar = NeoPatterns(&QuadrupedNeoPixelBar, PIXEL_OFFSET_LEFT_BAR, PIXELS_ON_ONE_BAR, false,
         &QuadrupedOnPatternCompleteHandler, true);
 
+// The color background for front distance bar
+color32_t sBarBackgroundColorArrayForDistance[PIXELS_ON_ONE_BAR] = { COLOR32_RED_QUARTER, COLOR32_RED_QUARTER, COLOR32_RED_QUARTER,
+COLOR32_YELLOW, COLOR32_YELLOW, COLOR32_GREEN_QUARTER, COLOR32_GREEN_QUARTER, COLOR32_GREEN_QUARTER };
+
 uint16_t getDelayFromSpeed() {
-    uint16_t tDelay = 12000 / sServoSpeed;
+    uint16_t tDelay = 12000 / sQuadrupedServoSpeed;
 #ifdef DEBUG
     Serial.print(F("Speed="));
-    Serial.print(sServoSpeed);
+    Serial.print(sQuadrupedServoSpeed);
     Serial.print(F(" Delay="));
     Serial.println(tDelay);
 #endif
     return tDelay;
 }
 
-void doPattern1() {
-    QuadrupedNeoPixelBar.RainbowCycle(getDelayFromSpeed() / 8);
-    sCleanPatternAfterEnd = true;
+void printActivePattern() {
+#ifdef INFO
+    Serial.print(F("Start pattern "));
+    LeftNeoPixelBar.printPatternName(LeftNeoPixelBar.ActivePattern, &Serial);
+    Serial.println();
+#endif
 }
+
+#ifdef HAS_ADDITIONAL_REMOTE_COMMANDS
+void doPattern1() {
+    RightNeoPixelBar.RainbowCycle(getDelayFromSpeed() / 8);
+    LeftNeoPixelBar.RainbowCycle(getDelayFromSpeed() / 8);
+    sCleanPatternAfterEnd = true;
+
+    printActivePattern();
+}
+
 void doPattern2() {
     uint16_t tDelay = getDelayFromSpeed();
     RightNeoPixelBar.Fade(COLOR32_GREEN_QUARTER, COLOR32_RED_QUARTER, 32, tDelay);
     LeftNeoPixelBar.Fade(COLOR32_RED_QUARTER, COLOR32_GREEN_QUARTER, 32, tDelay);
+
+    printActivePattern();
 }
 
 void doPattern3() {
-    QuadrupedNeoPixelBar.Stripes(COLOR32_GREEN_QUARTER, 4, COLOR32_RED_QUARTER, 4, 128, getDelayFromSpeed());
+    RightNeoPixelBar.Stripes(COLOR32_GREEN_QUARTER, 2, COLOR32_RED_QUARTER, 2, 128, getDelayFromSpeed());
+    LeftNeoPixelBar.Stripes(COLOR32_GREEN_QUARTER, 2, COLOR32_RED_QUARTER, 2, 128, getDelayFromSpeed());
+
+    printActivePattern();
 }
 
 void doPatternFire() {
     uint16_t tDelay = getDelayFromSpeed();
     RightNeoPixelBar.Fire(tDelay, 40);
-    LeftNeoPixelBar.Fire(tDelay, 40);
+    LeftNeoPixelBar.Fire(tDelay, 40, DIRECTION_DOWN);
     sCleanPatternAfterEnd = true;
+
+    printActivePattern();
 }
 
 void doPatternHeartbeat() {
@@ -95,6 +122,17 @@ void doPatternHeartbeat() {
     RightNeoPixelBar.Heartbeat(COLOR32_GREEN_HALF, tDelay, 2);
     FrontNeoPixelBar.Heartbeat(COLOR32_BLUE_HALF, tDelay, 2);
     LeftNeoPixelBar.Heartbeat(COLOR32_RED_HALF, tDelay, 2);
+
+    printActivePattern();
+}
+#endif // HAS_ADDITIONAL_REMOTE_COMMANDS
+
+void wipeOutPatterns() {
+    RightNeoPixelBar.ColorWipe(COLOR32_BLACK, getDelayFromSpeed(), FLAG_DO_NOT_CLEAR, DIRECTION_DOWN);
+    FrontNeoPixelBar.clear();
+    LeftNeoPixelBar.ColorWipe(COLOR32_BLACK, getDelayFromSpeed(), FLAG_DO_NOT_CLEAR);
+
+    printActivePattern();
 }
 
 void initNeoPatterns() {
@@ -106,17 +144,15 @@ void initNeoPatterns() {
     LeftNeoPixelBar.ColorWipe(COLOR32_RED_QUARTER, tDelay, 0, DIRECTION_DOWN);
 }
 
-void wipeOutPatterns() {
-    RightNeoPixelBar.ColorWipe(COLOR32_BLACK, getDelayFromSpeed(), FLAG_DO_NOT_CLEAR, DIRECTION_DOWN);
-    FrontNeoPixelBar.clear();
-    LeftNeoPixelBar.ColorWipe(COLOR32_BLACK, getDelayFromSpeed(), FLAG_DO_NOT_CLEAR);
-}
-
 void wipeOutPatternsBlocking() {
     wipeOutPatterns();
     while (isAtLeastOnePatternActive()) {
 //        sCallShowSynchronized();
-        delayAndCheck(10);
+#if defined(QUADRUPED_HAS_IR_CONTROL)
+        IRDispatcher.delayAndCheckForStop(10);
+#else
+        delay(10);
+#endif
     }
 }
 
@@ -130,11 +166,12 @@ bool isAtLeastOnePatternActive() {
 }
 
 /*
- * The modified servo ISR extended for NeoPixel handling.
+ * The modified overwritten ServoEasing ISR handling function extended for NeoPixel handling.
  * NeoPixels are handled here, since their show() function blocks interrupts
  * and must therefore be synchronized with the servo pulse generation.
- * The interrupt is not disabled, after all servos are stopped in order to call the NeoPixel update function continuously.
- * Calling of updateAllServos() is controlled by the misused ICNC1 / Input Capture Noise Canceler flag, which is set by ServoEasing.
+ * The interrupt is not disabled after all servos are stopped like in the original function.
+ * This enables to call the NeoPixel update function continuously here.
+ * Calling of updateAllServos() is controlled by the misused ICNC1 / Input Capture Noise Canceler flag, which is set by ServoEasing :-).
  *
  * Update all servos from list and check if all servos have stopped.
  */
@@ -149,10 +186,9 @@ void handleServoTimerInterrupt() {
         if (updateAllServos()) {
             // All servos have stopped here
             // Do not disable interrupt (we need it for NeoPixels), only reset the flag
-            // disableServoEasingInterrupt(); // original ISR
-            TCCR1B &= ~_BV(ICNC1);    // Only reset flag
+            TCCR1B &= ~_BV(ICNC1);    // Reset flag
 #ifdef INFO
-            Serial.println(F("Do not disable interrupt, reset only the interrupt flag"));
+            Serial.println(F("All servos stopped, using interrupts now only for NeoPixels update"));
 #endif
         }
     }
@@ -160,7 +196,7 @@ void handleServoTimerInterrupt() {
 }
 
 /*
- * @brief This function checks all patterns for update and calls show() of the underlying 24 pixel bar if needed.
+ * @brief This function checks all patterns for update and calls show() of the underlying 24 pixel bar if required.
  * It is called in ISR context by handleServoTimerInterrupt() since the show() function blocks interrupts
  * and must therefore be synchronized with the servo pulse generation.
  * @return - true if at least one pattern is active.
@@ -173,18 +209,15 @@ void handleQuadrupedNeoPixelUpdate() {
         /*
          * Check for patterns start or update.
          */
-        if (sLastActionTypeForNeopatternsDisplay != sActionTypeForNeopatternsDisplay) {
-            sLastActionTypeForNeopatternsDisplay = sActionTypeForNeopatternsDisplay;
+        if (sLastActionTypeForNeopatternsDisplay != sCurrentlyRunningAction) {
+            sLastActionTypeForNeopatternsDisplay = sCurrentlyRunningAction;
             handleAutomaticMovementPattern(); // To trigger NeoPatterns generation
         }
 
-        if (!QuadrupedNeoPixelBar.updateAllPartialPatterns()) {
-            if (sCallShowSynchronized) {
-                // show anyway
-                QuadrupedNeoPixelBar.show();
-            }
+        if (QuadrupedNeoPixelBar.updateAllPartialPatterns() || sCallShowSynchronized) {
+            sCallShowSynchronized = false;
+            QuadrupedNeoPixelBar.show();
         }
-        sCallShowSynchronized = false;
 #if defined(QUADRUPED_HAS_IR_CONTROL)
     }
 #endif
@@ -195,19 +228,19 @@ void handleQuadrupedNeoPixelUpdate() {
  */
 void handleAutomaticMovementPattern() {
 #ifdef INFO
-    Serial.print(F("Current action="));
-    Serial.print(sActionTypeForNeopatternsDisplay);
+    Serial.print(F("NP current action="));
+    Serial.print(sCurrentlyRunningAction);
     Serial.print(" -> ");
 #endif
-    if (sActionTypeForNeopatternsDisplay == ACTION_TYPE_STOP) {
+    if (sCurrentlyRunningAction == ACTION_TYPE_STOP) {
 #ifdef INFO
-        Serial.println(F("No new pattern"));
+        Serial.println(F("Stop, no new pattern"));
 #endif
     } else {
         /*
-         * Action ongoing. Start or restart pattern according to sActionTypeForNeopatternsDisplay and other parameter.
+         * Action ongoing. Start or restart pattern according to sCurrentlyRunningAction and other parameter.
          */
-        switch (sActionTypeForNeopatternsDisplay) {
+        switch (sCurrentlyRunningAction) {
         case ACTION_TYPE_CREEP:
 #ifdef INFO
             Serial.println(F("Starting ColorWipe"));
@@ -278,3 +311,4 @@ void QuadrupedOnPatternCompleteHandler(NeoPatterns *aLedsPtr) {
         wipeOutPatterns();
     }
 }
+#endif // #if defined(QUADRUPED_HAS_NEOPIXEL)
