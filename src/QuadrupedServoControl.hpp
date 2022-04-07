@@ -5,10 +5,7 @@
  *
  * Program for controlling a mePed Robot V2 with 8 servos using an IR Remote at pin A0
  * Supported IR remote are KEYES (the original mePed remote) and WM10
- * Select the one you have at line 23 in QuadrupedIRConfiguration.h
- *
- * To run this example need to install the "ServoEasing", "IRLremote" and "PinChangeInterrupt" libraries under "Tools -> Manage Libraries..." or "Ctrl+Shift+I"
- * Use "ServoEasing", "IRLremote" and "PinChangeInterrupt" as filter string.
+ * Select the one you have in QuadrupedConfiguration.h
  *
  *  Copyright (C) 2019-2022  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
@@ -26,19 +23,16 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
-#ifndef QUADRUPEDSERVOCONTROL_HPP
-#define QUADRUPEDSERVOCONTROL_HPP
+#ifndef _QUADRUPED_SERVO_CONTROL_HPP
+#define _QUADRUPED_SERVO_CONTROL_HPP
 
 #include <Arduino.h>
 
-// Contains macros to configure the ServoEasing library
-#include "QuadrupedServoControl.h"
-
-// include source
-#include "ServoEasing.hpp"
+#include "QuadrupedServoControl.h"  // Contains macros to configure the ServoEasing library
+#include "ServoEasing.hpp"          // include source
 
 //#define INFO // activate this to see serial info output
 
@@ -90,13 +84,13 @@ void initializeAllQuadrupedServos(uint_fast16_t aQuadrupedServoSpeed) {
     resetServosTo90Degree();
     setLiftServosToBodyHeight();
 
-#ifdef INFO
+#if defined(INFO)
     printBodyHeight();
 #endif
 }
 
 void shutdownServos() {
-#ifdef INFO
+#if defined(INFO)
     Serial.println(F("Shutdown servos"));
 #endif
     sRequestedBodyHeightAngle = LIFT_HIGHEST_ANGLE;
@@ -116,7 +110,7 @@ void setQuadrupedServoSpeed(uint_fast16_t aQuadrupedServoSpeed) {
 }
 
 void printQuadrupedServoSpeed() {
-#ifdef INFO
+#if defined(INFO)
     Serial.print(F(" Speed="));
     Serial.println(sQuadrupedServoSpeed);
 #endif
@@ -124,7 +118,7 @@ void printQuadrupedServoSpeed() {
 
 void printAndSetTrimAngles() {
     for (uint_fast8_t i = 0; i < NUMBER_OF_SERVOS; ++i) {
-#ifdef INFO
+#if defined(INFO)
         Serial.print(F("ServoTrimAngle["));
         Serial.print(i);
         Serial.print(F("]="));
@@ -144,7 +138,7 @@ void resetServosTo90Degree() {
  * Copy calibration array from EEPROM to RAM and set uninitialized values to 0
  */
 void eepromReadAndSetServoTrim() {
-#ifdef INFO
+#if defined(INFO)
     Serial.println(F("eepromReadAndSetServoTrim()"));
 #endif
     eeprom_read_block((void*) &sServoTrimAngles, &sServoTrimAnglesEEPROM, NUMBER_OF_SERVOS);
@@ -414,5 +408,4 @@ void synchronizeMoveAllServosAndCheckInputAndWait() {
     updateAndCheckInputAndWaitForAllServosToStop();
 }
 
-#endif /* QUADRUPEDSERVOCONTROL_HPP */
-#pragma once
+#endif // _QUADRUPED_SERVO_CONTROL_HPP

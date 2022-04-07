@@ -25,19 +25,20 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  */
 
-#ifndef HCSR04_H_
-#define HCSR04_H_
+#ifndef _HCSR04_H
+#define _HCSR04_H
 
 #include <stdint.h>
 
-#define US_DISTANCE_DEFAULT_TIMEOUT_MICROS 20000
-#define US_DISTANCE_DEFAULT_TIMEOUT_CENTIMETER 343   // Timeout of 20000L is 3.43 meter
+#define DISTANCE_TIMEOUT_RESULT                0
+#define US_DISTANCE_DEFAULT_TIMEOUT_MICROS    20000
+#define US_DISTANCE_DEFAULT_TIMEOUT_CENTIMETER  343   // Timeout of 20000L is 3.43 meter
 
-#define US_DISTANCE_TIMEOUT_MICROS_FOR_1_METER 5825  // Timeout of 5825 is 1 meter
+#define US_DISTANCE_TIMEOUT_MICROS_FOR_1_METER  5825  // Timeout of 5825 is 1 meter
 #define US_DISTANCE_TIMEOUT_MICROS_FOR_2_METER 11650 // Timeout of 11650 is 2 meter
 #define US_DISTANCE_TIMEOUT_MICROS_FOR_3_METER 17475 // Timeout of 17475 is 3 meter
 
@@ -64,6 +65,4 @@ extern volatile unsigned long sUSPulseMicros;
 #define HCSR04_MODE_USE_2_PINS      2
 extern uint8_t sHCSR04Mode;
 
-#endif // HCSR04_H_
-
-#pragma once
+#endif // _HCSR04_H

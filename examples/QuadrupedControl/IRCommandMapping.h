@@ -8,23 +8,35 @@
  *
  * Mapping for controlling a mePed Robot V2 with 8 servos using an IR Remote at pin A0
  * Supported IR remote are KEYES (the original mePed remote) and WM10 and ...
- * Select the one you have below.
+ * Select the one you have below or define it in the including file.
  */
 
-#ifndef IR_COMMAND_MAPPING_H_
-#define IR_COMMAND_MAPPING_H_
+#ifndef _IR_COMMAND_MAPPING_H
+#define _IR_COMMAND_MAPPING_H
 
 #include <Arduino.h>
 
+#include "IRCommandDispatcher.h" // IR_COMMAND_FLAG_BLOCKING etc. are defined here
 #include "QuadrupedControlCommands.h" // contains the command definitions used in the mapping table below
+#include "QuadrupedHelper.h"    // for additional commands
+#include "QuadrupedNeoPixel.h"  // for additional commands
 
-#if !defined(USE_KEYES_REMOTE) && !defined(USE_LAFVIN_REMOTE) && !defined(USE_WM10_REMOTE) && !defined(USE_KEYES_REMOTE_CLONE) && !defined(USE_WHITE_DVD_REMOTE)
-#define USE_KEYES_REMOTE_CLONE // the one you can buy at aliexpress
+/*
+ * !!! Choose your remote !!!
+ */
+//#define USE_KEYES_REMOTE_CLONE // With number pad above direction control, will be taken as default
+//#define USE_KEYES_REMOTE       // The mePed 2 Standard remote with number pad below direction control. Another name printed on the remote is Lafvin
+//#define USE_WM10_REMOTE
+//#define USE_WHITE_DVD_REMOTE
+//#define USE_DVBT_STICK_REMOTE
+#if !defined(USE_KEYES_REMOTE) && !defined(USE_WM10_REMOTE) && !defined(USE_KEYES_REMOTE_CLONE) \
+    && !defined(USE_WHITE_DVD_REMOTE) && !defined(USE_DVBT_STICK_REMOTE)
+#define USE_KEYES_REMOTE_CLONE // The one you can buy at aliexpress
 #endif
 
-#ifdef USE_KEYES_REMOTE_CLONE
+#if defined(USE_KEYES_REMOTE_CLONE)
 #define IR_REMOTE_NAME "KEYES_CLONE"
-// Codes for the KEYES CLONE remote control with 17 Keys with keypad above direction control
+// Codes for the KEYES CLONE remote control with 17 keys with keypad above direction control
 #define IR_ADDRESS 0x00
 
 #define IR_UP    0x18
@@ -74,18 +86,18 @@
 #define COMMAND_ENTER       IR_OK
 #define COMMAND_UP          IR_UP
 #define COMMAND_DOWN        IR_DOWN
-#endif
+#endif // defined(USE_KEYES_REMOTE_CLONE)
 
-#if defined(USE_KEYES_REMOTE) || defined(USE_LAFVIN_REMOTE)
-#if defined(IR_REMOTE_NAME)
+#if defined(USE_KEYES_REMOTE)
+#  if defined(IR_REMOTE_NAME)
 #error "Please choose only one remote for compile"
-#endif
+#  else
 #define IR_REMOTE_NAME "KEYES"
 /*
  * FIRST:
  * IR code to button mapping for better reading. IR codes should only referenced here.
  */
-// Codes for the KEYES remote control with 17 Keys
+// Codes for the KEYES remote control with 17 keys
 #define IR_ADDRESS 0x00
 
 #define IR_UP    0x46
@@ -136,18 +148,20 @@
 #define COMMAND_ENTER       IR_OK
 #define COMMAND_UP          IR_UP
 #define COMMAND_DOWN        IR_DOWN
-#endif
 
-#ifdef USE_WM10_REMOTE
-#if defined(IR_REMOTE_NAME)
+#  endif // defined(IR_REMOTE_NAME)
+#endif // defined(USE_KEYES_REMOTE)
+
+#if defined(USE_WM10_REMOTE)
+#  if defined(IR_REMOTE_NAME)
 #error "Please choose only one remote for compile"
-#endif
+#  else
 #define IR_REMOTE_NAME "WM10"
 /*
  * FIRST:
  * IR code to button mapping for better reading. IR codes should only referenced here.
  */
-// Codes for the WM010 remote control with 14 Keys
+// Codes for the WM010 remote control with 14 keys
 #define IR_ADDRESS 0x08
 
 #define IR_UP  0x4
@@ -198,12 +212,84 @@
 #define COMMAND_UP          IR_UP
 #define COMMAND_DOWN        IR_DOWN
 
-#endif
+#  endif // defined(IR_REMOTE_NAME)
+#endif // defined(USE_WM10_REMOTE)
 
-#ifdef USE_WHITE_DVD_REMOTE
-#if defined(IR_REMOTE_NAME)
+#if defined(USE_DVBT_STICK_REMOTE)
+#  if defined(IR_REMOTE_NAME)
 #error "Please choose only one remote for compile"
-#endif
+#  else
+#define IR_REMOTE_NAME "DVB-T"
+/*
+ * FIRST:
+ * IR code to button mapping for better reading. IR codes should only referenced here.
+ */
+// Codes for the silver China DVB-T Stick remote control with 3x7 (21) keys
+#define IR_ADDRESS 0x00
+
+#define IR_ON_OFF 0x4D
+#define IR_SOURCE 0x54
+#define IR_MUTE   0x16
+
+#define IR_RECORD     0x4C
+#define IR_TIMESHIFT  0x0C
+
+#define IR_CH_PLUS    0x05
+#define IR_CH_MINUS   0x02
+
+#define IR_VOL_MINUS  0xA
+#define IR_VOL_PLUS   0x1E
+
+#define IR_FULLSCREEN 0x40
+#define IR_RECALL     0x1C
+
+#define IR_0    0x12
+#define IR_1    0x09
+#define IR_2    0x1D
+#define IR_3    0x1F
+#define IR_4    0x0D
+#define IR_5    0x19
+#define IR_6    0x1B
+#define IR_7    0x11
+#define IR_8    0x15
+#define IR_9    0x17
+
+/*
+ * SECOND:
+ * IR button to command mapping for better reading. IR buttons should only referenced here.
+ */
+#define COMMAND_FORWARD     IR_UP
+#define COMMAND_BACKWARD    IR_DOWN
+#define COMMAND_RIGHT       IR_RIGHT
+#define COMMAND_LEFT        IR_LEFT
+
+#define COMMAND_CENTER      IR_ENTER
+#define COMMAND_STOP        IR_ON_OFF
+#define COMMAND_CALIBRATE   IR_MUTE
+#define COMMAND_DANCE       IR_SRC
+#define COMMAND_WAVE        IR_RETURN
+#define COMMAND_TWIST       COMMAND_EMPTY // not on this remote
+#define COMMAND_TROT        IR_PLAY_PAUSE
+#define COMMAND_AUTO        COMMAND_EMPTY // not on this remote
+#define COMMAND_TEST        COMMAND_EMPTY // not on this remote
+
+#define COMMAND_INCREASE_SPEED  IR_VOL_PLUS
+#define COMMAND_DECREASE_SPEED  IR_VOL_MINUS
+#define COMMAND_INCREASE_HEIGHT IR_FAST_FORWARD
+#define COMMAND_DECREASE_HEIGHT IR_FAST_BACK
+
+// locally for doCalibration
+#define COMMAND_ENTER       IR_ENTER
+#define COMMAND_UP          IR_UP
+#define COMMAND_DOWN        IR_DOWN
+
+#  endif // defined(IR_REMOTE_NAME)
+#endif // defined(USE_DVBT_STICK_REMOTE)
+
+#if defined(USE_WHITE_DVD_REMOTE)
+#  if defined(IR_REMOTE_NAME)
+#error "Please choose only one remote for compile"
+#  else
 #define IR_REMOTE_NAME "WHITE_DVD"
 #define HAS_ADDITIONAL_REMOTE_COMMANDS
 
@@ -287,10 +373,18 @@
 #define COMMAND_PATTERN_2   IR_2_LOWER
 #define COMMAND_PATTERN_3   IR_3_LOWER
 
-#define COMMAND_PATTERN_HEARTBEAT   IR_7_LOWER
-#define COMMAND_PATTERN_FIRE        IR_8_LOWER
-#define COMMAND_PATTERN_WIPE        IR_EJECT
-#endif
+#define COMMAND_PATTERN_4   IR_4_LOWER
+#define COMMAND_PATTERN_5   IR_5_LOWER
+#define COMMAND_PATTERN_6   IR_6_LOWER
+
+#define COMMAND_PATTERN_7   IR_7_LOWER
+#define COMMAND_PATTERN_8   IR_8_LOWER
+#define COMMAND_PATTERN_9   IR_9_LOWER
+
+#define COMMAND_PATTERN_0   IR_EJECT
+
+#  endif // defined(IR_REMOTE_NAME)
+#endif // defined(USE_WHITE_DVD_REMOTE)
 
 /*
  * THIRD:
@@ -314,6 +408,7 @@ static const char heighIncrease[] PROGMEM ="increase height";
 static const char heighDecrease[] PROGMEM ="decrease height";
 static const char left[] PROGMEM ="left";
 static const char myMove[] PROGMEM ="my move";
+static const char melody[] PROGMEM ="Melody";
 static const char pattern[] PROGMEM ="NeoPattern";
 static const char right[] PROGMEM ="right";
 static const char speedIncrease[] PROGMEM ="increase speed";
@@ -343,7 +438,7 @@ COMMAND_TROT, IR_COMMAND_FLAG_BLOCKING, &doTrot, trot }, {
 COMMAND_AUTO, IR_COMMAND_FLAG_BLOCKING, &doQuadrupedAutoMove, autoMove }, {
 COMMAND_TEST, IR_COMMAND_FLAG_BLOCKING, &doTest, test }, {
 #if defined(QUADRUPED_HAS_IR_CONTROL) && !defined(USE_USER_DEFINED_MOVEMENTS)
-        COMMAND_CALIBRATE, IR_COMMAND_FLAG_BLOCKING, &doCalibration, calibration }, {
+        COMMAND_CALIBRATE, IR_COMMAND_FLAG_BLOCKING, &doCalibration, calibration}, {
 #endif
         COMMAND_CENTER, IR_COMMAND_FLAG_BLOCKING, &doCenterServos, center }, {
 /*
@@ -362,7 +457,7 @@ COMMAND_INCREASE_HEIGHT, IR_COMMAND_FLAG_REPEATABLE_NON_BLOCKING, &doIncreaseHei
 COMMAND_DECREASE_HEIGHT, IR_COMMAND_FLAG_REPEATABLE_NON_BLOCKING, &doDecreaseHeight, heighDecrease }, {
 COMMAND_STOP, IR_COMMAND_FLAG_IS_STOP_COMMAND, &doStop, stop }
 
-#ifdef HAS_ADDITIONAL_REMOTE_COMMANDS
+#if defined(HAS_ADDITIONAL_REMOTE_COMMANDS)
         /*
          * Commands not accessible by simple remote because of lack of keys
          */
@@ -374,14 +469,13 @@ COMMAND_STOP, IR_COMMAND_FLAG_IS_STOP_COMMAND, &doStop, stop }
         , {
         COMMAND_PATTERN_1, IR_COMMAND_FLAG_NON_BLOCKING, &doPattern1, pattern }, {
         COMMAND_PATTERN_2, IR_COMMAND_FLAG_NON_BLOCKING, &doPattern2, pattern }, {
-        COMMAND_PATTERN_3, IR_COMMAND_FLAG_NON_BLOCKING, &doPattern3, pattern }, {
-        COMMAND_PATTERN_HEARTBEAT, IR_COMMAND_FLAG_NON_BLOCKING, &doPatternHeartbeat, pattern }, {
-        COMMAND_PATTERN_FIRE, IR_COMMAND_FLAG_NON_BLOCKING, &doPatternFire, pattern }, {
-        COMMAND_PATTERN_WIPE, IR_COMMAND_FLAG_NON_BLOCKING, &wipeOutPatterns, pattern }
+        COMMAND_PATTERN_3, IR_COMMAND_FLAG_NON_BLOCKING, &doPatternStripes, pattern }, {
+        COMMAND_PATTERN_4, IR_COMMAND_FLAG_NON_BLOCKING, &doPatternHeartbeat, pattern }, {
+        COMMAND_PATTERN_5, IR_COMMAND_FLAG_NON_BLOCKING, &doPatternFire, pattern }, {
+        COMMAND_PATTERN_6, IR_COMMAND_FLAG_NON_BLOCKING, &doWipeOutPatterns, pattern }, {
+        COMMAND_PATTERN_0, IR_COMMAND_FLAG_NON_BLOCKING, &doRandomMelody, melody }
 
 #endif
         };
 
-#endif /* IR_COMMAND_MAPPING_H_ */
-
-#pragma once
+#endif // _IR_COMMAND_MAPPING_H

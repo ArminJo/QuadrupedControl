@@ -7,38 +7,38 @@
  *      Author: Armin
  */
 
-#ifndef QUADRUPED_CONFIGURATION_H_
-#define QUADRUPED_CONFIGURATION_H_
+#ifndef _QUADRUPED_CONFIGURATION_H
+#define _QUADRUPED_CONFIGURATION_H
 
 #define PIN_BUZZER     3
 
 #define VCC_STOP_THRESHOLD_MILLIVOLT 3500 // stop moving if below 3.5 volt
 
-//#define QUADRUPED_HAS_IR_CONTROL      // 8600 bytes (including the movements)
-//#define QUADRUPED_PLAYS_RTTTL         // 1350 bytes for Short + Down
-//#define QUADRUPED_HAS_NEOPIXEL        // 9400 bytes
-//#define QUADRUPED_HAS_US_DISTANCE     // 830 bytes
-//#define QUADRUPED_HAS_US_DISTANCE_SERVO
-//#define INFO                          // 2850 bytes
+//#define QUADRUPED_HAS_IR_CONTROL      // Requires additionally 8600 bytes (including the movements)
+//#define QUADRUPED_ENABLE_RTTTL        // Requires additionally 1300 bytes for Short + Down
+//#define QUADRUPED_HAS_NEOPIXEL        // Requires additionally 6300 to 6600 bytes
+//#define QUADRUPED_HAS_US_DISTANCE     // Requires additionally 800 bytes
+//#define QUADRUPED_HAS_US_DISTANCE_SERVO // Requires additionally 710 bytes
+//#define INFO                          // Requires additionally 2850 bytes
 
 /*
  * !!! Choose your remote !!!
  */
-//#define USE_KEYES_REMOTE_CLONE With number pad and direction control switched, will be taken as default
-//#define USE_KEYES_REMOTE // The mePed 2 Standard remote
-//#define USE_LAFVIN_REMOTE // Another name (printed on the remote) for the mePed 2 Standard remote
+//#define USE_KEYES_REMOTE_CLONE // With number pad above direction control, will be taken as default
+//#define USE_KEYES_REMOTE       // The mePed 2 Standard remote with number pad below direction control. Another name printed on the remote is Lafvin
 //#define USE_WM10_REMOTE
 //#define USE_WHITE_DVD_REMOTE
+//#define USE_DVBT_STICK_REMOTE
 /*
  * Choose some predefined configurations
  */
 //#define QUADRUPED_1_WITH_DVD_REMOTE
-//#define QUADRUPED_2_WITH_LAVWIN_REMOTE
+//#define QUADRUPED_2_WITH_LAFVIN_REMOTE
 //#define QUADRUPED_3_WITH_KEYES_CLONE_REMOTE
 #if defined(QUADRUPED_1_WITH_DVD_REMOTE)
 #define USE_WHITE_DVD_REMOTE
 #define QUADRUPED_HAS_IR_CONTROL
-#define QUADRUPED_PLAYS_RTTTL
+#define QUADRUPED_ENABLE_RTTTL
 #define QUADRUPED_HAS_NEOPIXEL
 #define QUADRUPED_HAS_US_DISTANCE
 #define QUADRUPED_HAS_US_DISTANCE_SERVO
@@ -51,10 +51,10 @@
 #define ENABLE_PATTERN_FIRE
 #endif
 
-#if defined(QUADRUPED_2_WITH_LAVWIN_REMOTE)
+#if defined(QUADRUPED_2_WITH_LAFVIN_REMOTE)
 #define USE_KEYES_REMOTE // The mePed 2 Standard remote
 #define QUADRUPED_HAS_IR_CONTROL
-#define QUADRUPED_PLAYS_RTTTL
+#define QUADRUPED_ENABLE_RTTTL
 #define QUADRUPED_HAS_NEOPIXEL
 #define QUADRUPED_HAS_US_DISTANCE
 #define INFO
@@ -63,7 +63,7 @@
 #if defined(QUADRUPED_3_WITH_KEYES_CLONE_REMOTE)
 #define USE_KEYES_REMOTE_CLONE
 #define QUADRUPED_HAS_IR_CONTROL
-#define QUADRUPED_PLAYS_RTTTL
+#define QUADRUPED_ENABLE_RTTTL
 #define QUADRUPED_HAS_NEOPIXEL
 #define INFO
 #endif
@@ -89,10 +89,6 @@ extern Servo USServo;
 #  endif
 #endif
 
-#if defined(QUADRUPED_PLAYS_RTTTL)
-#include <PlayRtttl.h>
-#endif
-
 #if defined(QUADRUPED_HAS_NEOPIXEL)
 // patterns always used if Neopixel are enabled
 #define ENABLE_PATTERN_HEARTBEAT
@@ -107,5 +103,4 @@ extern Servo USServo;
  */
 bool delayAndCheckForLowVoltageAndStop(uint16_t aDelayMillis);
 
-#endif /* QUADRUPED_CONFIGURATION_H_ */
-#pragma once
+#endif // _QUADRUPED_CONFIGURATION_H

@@ -5,9 +5,10 @@
  *      Author: Armin
  */
 
-#ifndef QUADRUPED_NEOPIXEL_H_
-#define QUADRUPED_NEOPIXEL_H_
+#ifndef _QUADRUPED_NEOPIXEL_H
+#define _QUADRUPED_NEOPIXEL_H
 
+#if defined(QUADRUPED_HAS_NEOPIXEL)
 #include <NeoPatterns.h>
 
 #define PIN_NEOPIXEL    4
@@ -19,15 +20,24 @@
 #define PIXEL_OFFSET_FRONT_BAR PIXELS_ON_ONE_BAR
 #define PIXEL_OFFSET_LEFT_BAR (2*PIXELS_ON_ONE_BAR)
 
-void doPattern1();
-
 void initNeoPatterns();
-void wipeOutPatterns();
+
+#if defined(HAS_ADDITIONAL_REMOTE_COMMANDS)
+void doPattern1();
+void doPattern2();
+void doPatternStripes();
+void doPatternHeartbeat();
+void doPatternFire();
+void doRandomMelody();
+#endif
+
+void doWipeOutPatterns();
+
 void wipeOutPatternsBlocking();
 
 bool isAtLeastOnePatternActive();
 
-void showPatternSynchronized();
+void showPatternSynchronizedWithServos();
 
 void handleAutomaticMovementPattern();
 void handleQuadrupedNeoPixelUpdate();
@@ -43,5 +53,6 @@ extern color32_t sBarBackgroundColorArrayForDistance[]; // // The color backgrou
 
 extern bool sStartOrChangeNeoPatterns;
 
-#endif /* QUADRUPED_NEOPIXEL_H_ */
-#pragma once
+#endif // #if defined(QUADRUPED_HAS_NEOPIXEL)
+
+#endif // _QUADRUPED_NEOPIXEL_H

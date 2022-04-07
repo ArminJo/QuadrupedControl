@@ -19,7 +19,7 @@ For lifting the legs, the lift servos just use the easing type EASE_QUADRATIC_BO
 To customize the software to different requirements, there are some compile options / macros available.<br/>
 Modify them by enabling / disabling them, or change the values if applicable.
 
-| Option | Default | File | Description |
+| Name | Default value | File | Description |
 |-|-|-|-|
 | `QUADRUPED_HAS_IR_CONTROL` | disabled | QuadrupedConfiguration.h | IR remote control is enabled. |
 | `IR_INPUT_PIN` | A0 | QuadrupedConfiguration.h | Pin for IR remote control sensor. |
@@ -27,8 +27,8 @@ Modify them by enabling / disabling them, or change the values if applicable.
 | `QUADRUPED_HAS_NEOPIXEL` | disabled | QuadrupedConfiguration.h | NeoPattern animations on a 24 pieces Neopixel strip handled logically as 3 8 pieces strips is enabled. |
 | `QUADRUPED_HAS_US_DISTANCE` | disabled | QuadrupedConfiguration.h | US distance sensor at pin A3 + A4 is enabled. The distance is displayed on the middle/front 8 pieces of the Neopixel strips. |
 | `QUADRUPED_HAS_US_DISTANCE_SERVO` | disabled | QuadrupedConfiguration.h | A pan servo for the US distance sensor is enabled at pin 13. |
-| `QUADRUPED_PLAYS_RTTTL` | disabled | QuadrupedConfiguration.h | The quadruped plays a melody at startup. |
-| `QUADRUPED_1_WITH_DVD_REMOTE`, `QUADRUPED_2_WITH_LAVWIN_REMOTE`, `QUADRUPED_3_WITH_KEYES_CLONE_REMOTE` | disabled | QuadrupedConfiguration.h | 3 predefined configurations. |
+| `QUADRUPED_ENABLE_RTTTL` | disabled | QuadrupedConfiguration.h | The quadruped plays a melody at startup. |
+| `QUADRUPED_1_WITH_DVD_REMOTE`, `QUADRUPED_2_WITH_LAFVIN_REMOTE`, `QUADRUPED_3_WITH_KEYES_CLONE_REMOTE` | disabled | QuadrupedConfiguration.h | 3 predefined configurations. |
 
 ### Changing include (*.h) files with Arduino IDE
 First, use *Sketch > Show Sketch Folder (Ctrl+K)*.<br/>

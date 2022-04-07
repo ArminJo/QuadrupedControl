@@ -29,30 +29,38 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
 #include <Arduino.h>
 
 #include "QuadrupedConfiguration.h"
 
-#include "QuadrupedServoControl.hpp"
-#include "QuadrupedBasicMovements.hpp"
-#include "QuadrupedControlCommands.hpp" // Commands can also be used e.g. in loop().
-
-#include "QuadrupedHelper.h"
-
-#include "ADCUtils.h" // for getVCCVoltageMillivoltSimple() and printVCCVoltageMillivolt()
-
-#if defined(QUADRUPED_HAS_US_DISTANCE) && defined(QUADRUPED_HAS_US_DISTANCE_SERVO)
-Servo USServo;    // Servo for US sensor use Servo library direct, we do nor require easings here ( and we have only 8 Servo easings allocated)
-#define NO_LED_FEEDBACK_CODE // Disable IR LED feedback because servo is at the same pin. Must be included before IRCommandDispatcher.hpp
-#endif
-
 #if defined(QUADRUPED_HAS_IR_CONTROL)
 // Include the header only IRCommandDispatcher library in the main program
 #include "IRCommandMapping.h" // Must be included before IRCommandDispatcher.hpp to define IR_ADDRESS and IRMapping and string "unknown".
+#include "IRCommandDispatcher.h"
 #include "IRCommandDispatcher.hpp"
+#define QUADRUPED_MOVEMENT_BREAK_FLAG (IRDispatcher.requestToStopReceived)
+#endif
+
+#include "QuadrupedBasicMovements.h" // This helps the Eclipse indexer
+#include "QuadrupedControlCommands.hpp" // Commands can also be used e.g. in loop().
+#if defined(QUADRUPED_HAS_NEOPIXEL)
+#include "QuadrupedNeoPixel.hpp"
+#endif
+
+#include "QuadrupedHelper.h"
+
+#include "ADCUtils.hpp" // for getVCCVoltageMillivoltSimple() and printVCCVoltageMillivolt()
+
+#if defined(QUADRUPED_HAS_US_DISTANCE) && defined(QUADRUPED_HAS_US_DISTANCE_SERVO)
+Servo USServo; // Servo for US sensor use Servo library direct, we do nor require easings here ( and we have only 8 Servo easings allocated)
+#define NO_LED_FEEDBACK_CODE // Disable IR LED feedback because servo is at the same pin. Must be included before IRCommandDispatcher.hpp
+#endif
+
+#if defined(QUADRUPED_ENABLE_RTTTL)
+#include <PlayRtttl.hpp>
 #endif
 
 //#define INFO // activate this to see serial info output
@@ -73,7 +81,7 @@ Servo USServo;    // Servo for US sensor use Servo library direct, we do nor req
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
     Serial.begin(115200);
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) || defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #endif
     // Just to know which program is running on my Arduino
@@ -94,7 +102,7 @@ void setup() {
     USServo.write(90);
 #endif
 
-#if defined(QUADRUPED_PLAYS_RTTTL)
+#if defined(QUADRUPED_ENABLE_RTTTL)
     playRtttlBlockingPGM(PIN_BUZZER, Short);
 #else
     tone(PIN_BUZZER, 2000, 300);
