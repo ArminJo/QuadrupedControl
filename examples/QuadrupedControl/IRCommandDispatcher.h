@@ -29,6 +29,8 @@
 #ifndef _IR_COMMAND_DISPATCHER_H
 #define _IR_COMMAND_DISPATCHER_H
 
+#include <stdint.h>
+
 /*
  * For command mapping file
  */
@@ -80,7 +82,7 @@ public:
     void checkAndCallCommand(bool aCallAlsoBlockingCommands);
 
     void printIRCommandString(Print *aSerial);
-    void setRequestToStopReceived();
+    void setRequestToStopReceived(bool aRequestToStopReceived = true);
 
     uint8_t currentBlockingCommandCalled = COMMAND_INVALID; // The code for the current called command
     bool executingBlockingCommand = false;              // Lock for recursive calls of regular commands

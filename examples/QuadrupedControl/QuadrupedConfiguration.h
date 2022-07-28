@@ -12,7 +12,7 @@
 
 #define PIN_BUZZER     3
 
-#define VCC_STOP_THRESHOLD_MILLIVOLT 3500 // stop moving if below 3.5 volt
+#define VCC_STOP_THRESHOLD_MILLIVOLT 3400 // stop moving if below measured 3.4 volt
 
 //#define QUADRUPED_HAS_IR_CONTROL      // Requires additionally 8600 bytes (including the movements)
 //#define QUADRUPED_ENABLE_RTTTL        // Requires additionally 1300 bytes for Short + Down
@@ -77,23 +77,28 @@
 
 #if defined(QUADRUPED_HAS_US_DISTANCE)
 #include "HCSR04.h"
-
 #define PIN_TRIGGER_OUT     A3
 #define PIN_ECHO_IN         A4
-#define PIN_US_SERVO        13
-
 #define MILLIS_BETWEEN_MEASUREMENTS 200 // 5 per second
-#  if defined(QUADRUPED_HAS_US_DISTANCE_SERVO)
+#endif
+
+#if defined(QUADRUPED_HAS_US_DISTANCE_SERVO)
 #include "QuadrupedServoControl.h"
-extern Servo USServo;
-#  endif
+#define PIN_US_SERVO        13
+#define NO_LED_FEEDBACK_CODE // Disable IR LED feedback because servo is at the same pin. Must be included before IRCommandDispatcher.hpp
+extern ServoEasing USServo;
 #endif
 
 #if defined(QUADRUPED_HAS_NEOPIXEL)
+// Must be defined here, since we still have *.cpp sources
+#define DO_NOT_SUPPORT_BRIGHTNESS
+#define DO_NOT_SUPPORT_RGBW // saves up to 428 bytes additional program memory for the AllPatternsOnMultiDevices() example.
+
 // patterns always used if Neopixel are enabled
 #define ENABLE_PATTERN_HEARTBEAT
 #define ENABLE_PATTERN_COLOR_WIPE
 #define ENABLE_PATTERN_STRIPES
+#define ENABLE_PATTERN_FLASH
 #define ENABLE_PATTERN_SCANNER_EXTENDED
 #include "QuadrupedNeoPixel.h"
 #endif

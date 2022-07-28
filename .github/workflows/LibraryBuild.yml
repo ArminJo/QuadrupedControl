@@ -56,7 +56,7 @@ jobs:
         include:
           - arduino-boards-fqbn: arduino:avr:uno|AllFeatures
             build-properties:
-              QuadrupedControl: -DQUADRUPED_1_WITH_DVD_REMOTE
+              QuadrupedControl: -DQUADRUPED_1_WITH_DVD_REMOTE -mrelax
 
       # Do not cancel all jobs / architectures if one job fails
       fail-fast: false

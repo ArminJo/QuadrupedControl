@@ -4,10 +4,11 @@ Arduino library for generating all the quadruped movements for controlling a meP
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Build Status](https://github.com/ArminJo/QuadrupedControl/workflows/LibraryBuild/badge.svg)](https://github.com/ArminJo/QuadrupedControl/actions)
 ![Hit Counter](https://visitor-badge.laobi.icu/badge?page_id=ArminJo_QuadrupedControl)
+[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
 
 Used in the "QuadrupedControl" example of Arduino library [ServoEasing](https://github.com/ArminJo/ServoEasing/tree/master/examples/QuadrupedControl).
 
-## YouTube video of mePed V2 in action controlled by an IR remote (SimpleQuadrupedControl example).
+## YouTube video of mePed V2 in action controlled by the [QuadrupedControl example](https://github.com/ArminJo/QuadrupedControl/tree/master/examples/QuadrupedControl) and IR remote.
 [![mePed V2 in actions](https://i.ytimg.com/vi/MsIjTRRUyGU/hqdefault.jpg)](https://youtu.be/MsIjTRRUyGU)
 
 Smooth servo movements are controlled by the [Servo easing library for Arduino](https://github.com/ArminJo/ServoEasing).
