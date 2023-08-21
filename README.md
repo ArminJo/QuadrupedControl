@@ -17,8 +17,11 @@ It also controls the optional IR receiver and NeoPixels.
 <br/>
 [![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
 
-Used as [QuadrupedControl example of Arduino library ServoEasing](https://github.com/ArminJo/ServoEasing/tree/master/examples/QuadrupedControl).
+Available as [QuadrupedControl](https://github.com/ArminJo/ServoEasing/tree/master/examples/QuadrupedControl) example of the Arduino library [ServoEasing](https://github.com/ArminJo/ServoEasing).
+
 </div>
+
+#### If you find this library useful, please give it a star.
 
 <br/>
 
@@ -29,6 +32,12 @@ Smooth servo movements are controlled by the [Servo easing library for Arduino](
 For lifting the legs, the lift servos just use the easing type EASE_QUADRATIC_BOUNCING.
 
 ### A very simple and easy to understand version of controlling a mePed can be found [here](https://github.com/oracid/Easy-Quadruped-kinematic)
+
+<br/>
+
+# Installation
+Install **[ServoEasing library](https://github.com/ArminJo/ServoEasing)** with *Tools > Manage Libraries...* or *Ctrl+Shift+I*. Use "ServoEasing" as filter string.<br/>
+Then open the example **[QuadrupedControl](https://github.com/ArminJo/ServoEasing/tree/master/examples/QuadrupedControl)** available at File > Examples > Examples from Custom Libraries / ServoEasing.
 
 <br/>
 
@@ -47,6 +56,9 @@ Modify them by enabling / disabling them in the file *QuadrupedConfiguration.h*,
 | `QUADRUPED_ENABLE_RTTTL` | disabled | The quadruped plays a melody at startup. |
 | `QUADRUPED_1_WITH_DVD_REMOTE`, `QUADRUPED_2_WITH_LAFVIN_REMOTE`, `QUADRUPED_3_WITH_KEYES_CLONE_REMOTE` | disabled | 3 predefined configurations. |
 
+<br/>
+
+# Pictures
 Bottom view of my mePed. You can see the two lipos connected parallel resulting in a 4.2 to 3.6 volt supply.
 ![Bottom view](pictures/mePed_bottom.jpg)
 
