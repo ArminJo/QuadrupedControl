@@ -41,6 +41,20 @@
 #define IR_COMMAND_FLAG_BEEP            0x04 // Do a single short beep before executing command. May not be useful for short or repeating commands.
 #define IR_COMMAND_FLAG_BLOCKING_BEEP   (IR_COMMAND_FLAG_BLOCKING | IR_COMMAND_FLAG_BEEP)
 
+
+#if !defined(IS_STOP_REQUESTED)
+#define IS_STOP_REQUESTED               IRDispatcher.requestToStopReceived
+#endif
+#if !defined(RETURN_IF_STOP)
+#define RETURN_IF_STOP                  if (IRDispatcher.requestToStopReceived) return
+#endif
+#if !defined(BREAK_IF_STOP)
+#define BREAK_IF_STOP                   if (IRDispatcher.requestToStopReceived) break
+#endif
+#if !defined(DELAY_AND_RETURN_IF_STOP)
+#define DELAY_AND_RETURN_IF_STOP(aDurationMillis)   if (IRDispatcher.delayAndCheckForStop(aDurationMillis)) return
+#endif
+
 // Basic mapping structure
 struct IRToCommandMappingStruct {
 #if defined(IR_COMMAND_HAS_MORE_THAN_8_BIT)
@@ -73,10 +87,6 @@ struct IRDataForCommandDispatcherStruct {
 #else
 #define COMMAND_EMPTY       0xFF // code no command
 #endif
-
-#define RETURN_IF_STOP  if (IRDispatcher.requestToStopReceived) return
-#define BREAK_IF_STOP   if (IRDispatcher.requestToStopReceived) break
-#define DELAY_AND_RETURN_IF_STOP(aDurationMillis)   if (IRDispatcher.delayAndCheckForStop(aDurationMillis)) return
 
 class IRCommandDispatcher {
 public:
