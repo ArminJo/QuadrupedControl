@@ -1,14 +1,15 @@
 /*
  * QuadrupedBasicMovements.hpp
  *
- * This file  contains the basic movement functions
+ * This file contains the basic movement functions for creeping, trotting, twisting and turning
  *
- *  Copyright (C) 2019-2022  Armin Joachimsmeyer
+ *  Copyright (C) 2019-2026  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of QuadrupedControl https://github.com/ArminJo/QuadrupedControl.
+ *  This file is part of ServoEasing https://github.com/ArminJo/ServoEasing.
  *
- *  QuadrupedControl is free software: you can redistribute it and/or modify
+ *  QuadrupedControl and ServoEasing are free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
@@ -21,7 +22,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
-
 #ifndef _QUADRUPED_BASIC_MOVEMENTS_HPP
 #define _QUADRUPED_BASIC_MOVEMENTS_HPP
 
@@ -30,20 +30,26 @@
 #include "QuadrupedBasicMovements.h"
 #include "QuadrupedServoControl.h"
 
-//#define INFO // activate this to see serial info output
+// This block must be located after the includes of other *.hpp files
+//#define LOCAL_INFO  // This enables info output only for this file
+#include "LocalDebugLevelStart.h"
 
 volatile uint8_t sMovingDirection = MOVE_DIRECTION_FORWARD; // controls the direction of the basic moves
 
+/*
+ * Combined actions like dance, auto move and demo move call itself basic actions, which in turn set and reset sCurrentlyRunningAction
+ * Therefore we need another variable sCurrentlyRunningCombinedAction to detect this.
+ */
 uint8_t sCurrentlyRunningCombinedAction = ACTION_TYPE_STOP; // To suppress melodies or waves during these moves
 uint8_t sCurrentlyRunningAction = ACTION_TYPE_STOP; // A change on this action type can be detected e.g. to trigger the generation of new NeoPatterns
 uint8_t sLastRunningAction = ACTION_TYPE_STOP;      // To enable pause / resume
 
 /*
+ * Interruptible movement
  * Gait variations
  * 1. Creep: Move one leg forward and down, then move body with all 4 legs down, then move diagonal leg.
  * 2. Trot: Move 2 diagonal legs up and forward
  */
-
 void moveTrot(uint8_t aNumberOfTrots) {
     sCurrentlyRunningAction = ACTION_TYPE_TROT;
     setEasingTypeForMoving();
@@ -82,7 +88,7 @@ void setActionToStop() {
 
 void basicTwist(int8_t aTwistAngle, bool aTurnLeft) {
     sCurrentlyRunningAction = ACTION_TYPE_TWIST;
-#if defined(INFO)
+#if defined(LOCAL_INFO)
     Serial.print(F("Twist angle="));
     Serial.print(aTwistAngle);
     if (aTurnLeft) {
@@ -94,7 +100,7 @@ void basicTwist(int8_t aTwistAngle, bool aTurnLeft) {
     int8_t tTwistAngle;
     aTurnLeft ? tTwistAngle = -aTwistAngle : tTwistAngle = aTwistAngle;
 
-    setPivotServos(90 + tTwistAngle, 90 + tTwistAngle, 90 + tTwistAngle, 90 + tTwistAngle);
+    movePivotServosToNextPositionsAndCheckInputAndWait(90 + tTwistAngle, 90 + tTwistAngle, 90 + tTwistAngle, 90 + tTwistAngle);
     setActionToStop();
 }
 
@@ -149,7 +155,7 @@ void moveTurn(uint8_t aNumberOfBasicTurns) {
  * @param aLiftLegIndex from 0 FRONT_LEFT to 3 FRONT_RIGHT
  */
 void basicTurn(uint8_t aLiftLegIndex, bool aTurnLeft) {
-#if defined(INFO)
+#if defined(LOCAL_INFO)
     Serial.print(F("Lift leg="));
     Serial.print(aLiftLegIndex);
     if (aTurnLeft) {
@@ -195,13 +201,13 @@ void basicTurn(uint8_t aLiftLegIndex, bool aTurnLeft) {
  * Y position with right legs closed and left legs open
  */
 void goToYPosition(uint8_t aDirection) {
-#if defined(INFO)
+#if defined(LOCAL_INFO)
     Serial.print(F("goToYPosition direction="));
     Serial.println(aDirection);
 #endif
     transformAndSetPivotServos(180 - Y_POSITION_OPEN_ANGLE, Y_POSITION_OPEN_ANGLE, (180 - Y_POSITION_CLOSE_ANGLE),
     Y_POSITION_CLOSE_ANGLE, aDirection, false, false);
-    setLiftServos(sRequestedBodyHeightAngle);
+    moveLiftServosToNextPositionsAndCheckInputAndWait(sRequestedBodyHeightAngle);
 }
 
 /*
@@ -213,7 +219,7 @@ void moveCreep(uint8_t aNumberOfCreeps) {
     setEasingTypeForMoving();
 
     do {
-        // read current direction for next 2  creeps
+        // remember current direction for next 2 creeps, because sMovingDirection is volatile
         uint8_t tCurrentDirection = sMovingDirection;
 
         basicHalfCreep(tCurrentDirection, false);
@@ -228,11 +234,14 @@ void moveCreep(uint8_t aNumberOfCreeps) {
     setActionToStop();
 }
 
-/*
- * moves one leg forward and down, then moves body, then moves diagonal leg.
+/**
+ * Moves one leg forward and down, then moves body, then moves diagonal leg forward and down.
+ * Second half creep is the same, but with mirrored servos.
+ * @param aDirection MOVE_DIRECTION_FORWARD, MOVE_DIRECTION_LEFT etc.
+ * @param doMirror swaps Front <-> Back or Left <-> Right for second part of creep.
  */
 void basicHalfCreep(uint8_t aDirection, bool doMirror) {
-#if defined(INFO)
+#if defined(LOCAL_INFO)
     Serial.print(F("BasicHalfCreep Direction="));
     Serial.print(aDirection);
     Serial.print(F(" doMirror="));
@@ -254,37 +263,35 @@ void basicHalfCreep(uint8_t aDirection, bool doMirror) {
     uint8_t tRequestedBodyHeightAngle = sRequestedBodyHeightAngle;  // sRequestedBodyHeightAngle is volatile (and code is smaller)
     transformAndSetAllServos(180 - Y_POSITION_OPEN_ANGLE, Y_POSITION_OPEN_ANGLE, 180 - Y_POSITION_CLOSE_ANGLE,
     Y_POSITION_FRONT_ANGLE, tRequestedBodyHeightAngle, tRequestedBodyHeightAngle, tRequestedBodyHeightAngle, LIFT_HIGHEST_ANGLE,
-            aDirection, doMirror);
+            aDirection, doMirror, true);
     QUADRUPED_RETURN_IF_STOP;
-
-    tRequestedBodyHeightAngle = sRequestedBodyHeightAngle; // sRequestedBodyHeightAngle maybe changed by remote
 
 // 2. Move body forward by CREEP_BODY_MOVE_ANGLE
-#if defined(INFO)
+#if defined(LOCAL_INFO)
     Serial.println(F("2. move body"));
 #endif
+    setPivotServosSpeed(sQuadrupedServoSpeed / 2); // Here we have 1/2 distance so we use 1/2 speed to have the same time as for the other 2 moves
     transformAndSetAllServos(180 - Y_POSITION_CLOSE_ANGLE, Y_POSITION_OPEN_ANGLE + CREEP_BODY_MOVE_ANGLE,
             180 - Y_POSITION_OPEN_ANGLE, Y_POSITION_OPEN_ANGLE, tRequestedBodyHeightAngle, tRequestedBodyHeightAngle,
-            tRequestedBodyHeightAngle, tRequestedBodyHeightAngle, aDirection, doMirror);
+            tRequestedBodyHeightAngle, tRequestedBodyHeightAngle, aDirection, doMirror, true);
+    setPivotServosSpeed(sQuadrupedServoSpeed);
     QUADRUPED_RETURN_IF_STOP;
 
-    tRequestedBodyHeightAngle = sRequestedBodyHeightAngle; // sRequestedBodyHeightAngle maybe changed by remote
-
 // 3. Move back right leg up, forward and down
-#if defined(INFO)
-    Serial.println(F("3. move back leg to close position"));
+#if defined(LOCAL_INFO)
+    Serial.println(F("3. move back leg to Y position"));
 #endif
 // Move to Y position with other side legs together
     transformAndSetAllServos(180 - Y_POSITION_CLOSE_ANGLE, Y_POSITION_CLOSE_ANGLE, 180 - Y_POSITION_OPEN_ANGLE,
     Y_POSITION_OPEN_ANGLE, tRequestedBodyHeightAngle, LIFT_HIGHEST_ANGLE, tRequestedBodyHeightAngle, tRequestedBodyHeightAngle,
-            aDirection, doMirror);
+            aDirection, doMirror, true);
 }
 
 /*
  * Just as an unused example to see the principle of movement
  */
 void basicSimpleHalfCreep(uint8_t aLeftLegIndex, bool aMoveMirrored) {
-#if defined(INFO)
+#if defined(LOCAL_INFO)
     Serial.print(F("LeftLegIndex="));
     Serial.print(aLeftLegIndex);
 #endif
@@ -292,7 +299,7 @@ void basicSimpleHalfCreep(uint8_t aLeftLegIndex, bool aMoveMirrored) {
     uint8_t tLeftLegPivotServoIndex;
 
     if (aMoveMirrored) {
-#if defined(INFO)
+#if defined(LOCAL_INFO)
         Serial.print(F(" mirrored=true"));
 #endif
 // get index of pivot servo of mirrored leg
@@ -300,14 +307,14 @@ void basicSimpleHalfCreep(uint8_t aLeftLegIndex, bool aMoveMirrored) {
     } else {
         tLeftLegPivotServoIndex = aLeftLegIndex * SERVOS_PER_LEG;
     }
-#if defined(INFO)
+#if defined(LOCAL_INFO)
     Serial.println();
 #endif
 //    printArrayPositions(&Serial);
     uint8_t tEffectiveAngle;
 
 // 1. Move front left leg up, forward and down
-#if defined(INFO)
+#if defined(LOCAL_INFO)
     Serial.println(F("1. move front leg"));
 #endif
     moveOneServoAndCheckInputAndWait(tLeftLegPivotServoIndex + LIFT_SERVO_OFFSET, LIFT_HIGHEST_ANGLE);
@@ -324,7 +331,7 @@ void basicSimpleHalfCreep(uint8_t aLeftLegIndex, bool aMoveMirrored) {
     QUADRUPED_RETURN_IF_STOP;
 
 // 2. Move body forward
-#if defined(INFO)
+#if defined(LOCAL_INFO)
     Serial.println(F("2. move body"));
 #endif
     uint8_t tIndex = tLeftLegPivotServoIndex;
@@ -361,10 +368,13 @@ void basicSimpleHalfCreep(uint8_t aLeftLegIndex, bool aMoveMirrored) {
         ServoEasing::ServoEasingNextPositionArray[tIndex] = 180 - Y_POSITION_CLOSE_ANGLE;
     }
 //    printArrayPositions(&Serial);
+    /*
+     * Apply all movements now
+     */
     synchronizeMoveAllServosAndCheckInputAndWait();
 
 // 3. Move back right leg up, forward and down
-#if defined(INFO)
+#if defined(LOCAL_INFO)
     Serial.println(F("3. move back leg to close position"));
 #endif
 // Move to Y position with right legs together / 120, 60, 180, 0
@@ -380,22 +390,22 @@ void basicSimpleHalfCreep(uint8_t aLeftLegIndex, bool aMoveMirrored) {
 }
 
 void lean(uint8_t aDirection) {
-#if defined(INFO)
+#if defined(LOCAL_INFO)
     Serial.print(F("lean direction="));
     Serial.println(aDirection);
 #endif
     if (aDirection == MOVE_DIRECTION_FORWARD) {
         // Front
-        setLiftServos(LIFT_HIGHEST_ANGLE, LIFT_LOWEST_ANGLE, LIFT_LOWEST_ANGLE, LIFT_HIGHEST_ANGLE);
+        moveLiftServosToNextPositionsAndCheckInputAndWait(LIFT_HIGHEST_ANGLE, LIFT_LOWEST_ANGLE, LIFT_LOWEST_ANGLE, LIFT_HIGHEST_ANGLE);
     } else if (aDirection == MOVE_DIRECTION_BACKWARD) {
         // Back
-        setLiftServos(LIFT_LOWEST_ANGLE, LIFT_HIGHEST_ANGLE, LIFT_HIGHEST_ANGLE, LIFT_LOWEST_ANGLE);
+        moveLiftServosToNextPositionsAndCheckInputAndWait(LIFT_LOWEST_ANGLE, LIFT_HIGHEST_ANGLE, LIFT_HIGHEST_ANGLE, LIFT_LOWEST_ANGLE);
     } else if (aDirection == MOVE_DIRECTION_RIGHT) {
         // Right
-        setLiftServos(LIFT_LOWEST_ANGLE, LIFT_LOWEST_ANGLE, LIFT_HIGHEST_ANGLE, LIFT_HIGHEST_ANGLE);
+        moveLiftServosToNextPositionsAndCheckInputAndWait(LIFT_LOWEST_ANGLE, LIFT_LOWEST_ANGLE, LIFT_HIGHEST_ANGLE, LIFT_HIGHEST_ANGLE);
     } else {
         // Left
-        setLiftServos(LIFT_HIGHEST_ANGLE, LIFT_HIGHEST_ANGLE, LIFT_LOWEST_ANGLE, LIFT_LOWEST_ANGLE);
+        moveLiftServosToNextPositionsAndCheckInputAndWait(LIFT_HIGHEST_ANGLE, LIFT_HIGHEST_ANGLE, LIFT_LOWEST_ANGLE, LIFT_LOWEST_ANGLE);
     }
 }
 
@@ -407,13 +417,16 @@ void downAndUp(uint8_t aNumberOfDownAndUps) {
     sCurrentlyRunningAction = ACTION_TYPE_DOWN_UP;
     for (uint8_t i = 0; i < aNumberOfDownAndUps; ++i) {
         // Move down and up and back to starting height
-        setLiftServos(LIFT_HIGHEST_ANGLE);
+        moveLiftServosToNextPositionsAndCheckInputAndWait(LIFT_HIGHEST_ANGLE);
         QUADRUPED_BREAK_IF_STOP;
-        setLiftServos(LIFT_LOWEST_ANGLE);
+        moveLiftServosToNextPositionsAndCheckInputAndWait(LIFT_LOWEST_ANGLE);
         QUADRUPED_BREAK_IF_STOP;
     }
     // set back to normal height
-    setLiftServos(sRequestedBodyHeightAngle);
+    moveLiftServosToNextPositionsAndCheckInputAndWait(sRequestedBodyHeightAngle);
     setActionToStop();
 }
+
+#include "LocalDebugLevelEnd.h"
+
 #endif // _QUADRUPED_BASIC_MOVEMENTS_HPP
