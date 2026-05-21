@@ -467,7 +467,7 @@ const struct IRToCommandMappingStruct IRMapping[] = {
 #if defined(QUADRUPED_HAS_IR_CONTROL) && !defined(USE_USER_DEFINED_MOVEMENTS)
         { COMMAND_CALIBRATE, IR_COMMAND_FLAG_BLOCKING, &doCalibration, COMMAND_STRING(calibration) }, /**/
 #endif
-        { COMMAND_DANCE, IR_COMMAND_FLAG_BLOCKING, &doDance, COMMAND_STRING(dance) }, /**/
+        { COMMAND_DANCE, IR_COMMAND_FLAG_BLOCKING, &doDanceAndWave, COMMAND_STRING(dance) }, /**/
         { COMMAND_TWIST, IR_COMMAND_FLAG_BLOCKING, &doTwist, COMMAND_STRING(twistString) }, /**/
         { COMMAND_WAVE, IR_COMMAND_FLAG_BLOCKING, &doWave, COMMAND_STRING(wave) }, /**/
         { COMMAND_TROT, IR_COMMAND_FLAG_BLOCKING, &doTrot, COMMAND_STRING(trot) }, /**/

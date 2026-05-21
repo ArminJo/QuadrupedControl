@@ -6,7 +6,7 @@ It also controls the optional IR receiver and NeoPixels.
 
 [![Badge License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
  &nbsp; &nbsp; 
-[![Badge Version](https://img.shields.io/github/v/release/ArminJo/QuadrupedControl?include_prereleases&color=yellow&logo=DocuSign&logoColor=white)](https://github.com/ServoEasing/QuadrupedControl/releases/latest)
+[![Badge Version](https://img.shields.io/github/v/release/ArminJo/QuadrupedControl?color=yellow&logo=DocuSign&logoColor=white)](https://github.com/ServoEasing/QuadrupedControl/releases/latest)
  &nbsp; &nbsp; 
 [![Badge Commits since latest](https://img.shields.io/github/commits-since/ArminJo/QuadrupedControl/latest?color=yellow)](https://github.com/ArminJo/QuadrupedControl/commits/master)
  &nbsp; &nbsp; 

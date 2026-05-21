@@ -36,7 +36,7 @@ void doCreep();
 void doTurn();
 
 // Combined moves
-void doDance();
+void doDanceAndWave();
 void doWave();
 void doTwist();
 void doQuadrupedDemoMove();

@@ -34,6 +34,21 @@
 //#define LOCAL_INFO  // This enables info output only for this file
 #include "LocalDebugLevelStart.h"
 
+const char StringStop[] PROGMEM = "Stop";
+const char StringCreep[] PROGMEM = "Creep";
+const char StringTrot[] PROGMEM = "Trot";
+const char StringTurn[] PROGMEM = "Turn";
+const char StringTwist[] PROGMEM = "Twist";
+const char StringShutdown[] PROGMEM = "Shutdown";
+const char StringLean[] PROGMEM = "Lean";
+const char StringDownUp[] PROGMEM = "Down+Up";
+const char StringTest[] PROGMEM = "Test";
+const char StringWave[] PROGMEM = "Wave";
+const char StringPause[] PROGMEM = "Pause";
+const char StringMelody[] PROGMEM = "Melody";
+const char *const ActionStrings[] PROGMEM = { StringStop, StringCreep, StringTrot, StringTurn, StringTwist, StringShutdown, StringLean,
+        StringDownUp, StringTest, StringWave, StringPause, StringMelody };
+
 volatile uint8_t sMovingDirection = MOVE_DIRECTION_FORWARD; // controls the direction of the basic moves
 
 /*
@@ -44,6 +59,24 @@ uint8_t sCurrentlyRunningCombinedAction = ACTION_TYPE_STOP; // To suppress melod
 uint8_t sCurrentlyRunningAction = ACTION_TYPE_STOP; // A change on this action type can be detected e.g. to trigger the generation of new NeoPatterns
 uint8_t sLastRunningAction = ACTION_TYPE_STOP;      // To enable pause / resume
 
+#if defined(__AVR__)
+const __FlashStringHelper* getActionString(uint8_t aAction) {
+    const char *tActionStringPtr = (char*) pgm_read_word(&ActionStrings[aAction]);
+    return ((__FlashStringHelper*) (tActionStringPtr));
+}
+#else
+const char* getActionString(uint8_t aAction) {
+    return ActionStrings[aAction];
+}
+#endif
+
+void printCurrentActionString(Print *aSerial) {
+    if (sCurrentlyRunningAction <= sizeof(ActionStrings)) {
+        aSerial->print(getActionString(sCurrentlyRunningAction));
+    } else {
+        aSerial->print(F("Not yet implemented"));
+    }
+}
 /*
  * Interruptible movement
  * Gait variations
@@ -155,7 +188,7 @@ void moveTurn(uint8_t aNumberOfBasicTurns) {
  * @param aLiftLegIndex from 0 FRONT_LEFT to 3 FRONT_RIGHT
  */
 void basicTurn(uint8_t aLiftLegIndex, bool aTurnLeft) {
-#if defined(LOCAL_INFO)
+#if defined(LOCAL_DEBUG)
     Serial.print(F("Lift leg="));
     Serial.print(aLiftLegIndex);
     if (aTurnLeft) {
@@ -211,7 +244,7 @@ void goToYPosition(uint8_t aDirection) {
 }
 
 /*
- * Default is 0 -> 256 creeps
+ * Default is 0 i.e. 256 creeps
  */
 void moveCreep(uint8_t aNumberOfCreeps) {
     sCurrentlyRunningAction = ACTION_TYPE_CREEP;
@@ -241,7 +274,7 @@ void moveCreep(uint8_t aNumberOfCreeps) {
  * @param doMirror swaps Front <-> Back or Left <-> Right for second part of creep.
  */
 void basicHalfCreep(uint8_t aDirection, bool doMirror) {
-#if defined(LOCAL_INFO)
+#if defined(LOCAL_DEBUG)
     Serial.print(F("BasicHalfCreep Direction="));
     Serial.print(aDirection);
     Serial.print(F(" doMirror="));
@@ -390,22 +423,28 @@ void basicSimpleHalfCreep(uint8_t aLeftLegIndex, bool aMoveMirrored) {
 }
 
 void lean(uint8_t aDirection) {
-#if defined(LOCAL_INFO)
+#if defined(LOCAL_DEBUG)
     Serial.print(F("lean direction="));
     Serial.println(aDirection);
 #endif
+    sCurrentlyRunningAction = ACTION_TYPE_LEAN;
+
     if (aDirection == MOVE_DIRECTION_FORWARD) {
         // Front
-        moveLiftServosToNextPositionsAndCheckInputAndWait(LIFT_HIGHEST_ANGLE, LIFT_LOWEST_ANGLE, LIFT_LOWEST_ANGLE, LIFT_HIGHEST_ANGLE);
+        moveLiftServosToNextPositionsAndCheckInputAndWait(LIFT_HIGHEST_ANGLE, LIFT_LOWEST_ANGLE, LIFT_LOWEST_ANGLE,
+        LIFT_HIGHEST_ANGLE);
     } else if (aDirection == MOVE_DIRECTION_BACKWARD) {
         // Back
-        moveLiftServosToNextPositionsAndCheckInputAndWait(LIFT_LOWEST_ANGLE, LIFT_HIGHEST_ANGLE, LIFT_HIGHEST_ANGLE, LIFT_LOWEST_ANGLE);
+        moveLiftServosToNextPositionsAndCheckInputAndWait(LIFT_LOWEST_ANGLE, LIFT_HIGHEST_ANGLE, LIFT_HIGHEST_ANGLE,
+        LIFT_LOWEST_ANGLE);
     } else if (aDirection == MOVE_DIRECTION_RIGHT) {
         // Right
-        moveLiftServosToNextPositionsAndCheckInputAndWait(LIFT_LOWEST_ANGLE, LIFT_LOWEST_ANGLE, LIFT_HIGHEST_ANGLE, LIFT_HIGHEST_ANGLE);
+        moveLiftServosToNextPositionsAndCheckInputAndWait(LIFT_LOWEST_ANGLE, LIFT_LOWEST_ANGLE, LIFT_HIGHEST_ANGLE,
+        LIFT_HIGHEST_ANGLE);
     } else {
         // Left
-        moveLiftServosToNextPositionsAndCheckInputAndWait(LIFT_HIGHEST_ANGLE, LIFT_HIGHEST_ANGLE, LIFT_LOWEST_ANGLE, LIFT_LOWEST_ANGLE);
+        moveLiftServosToNextPositionsAndCheckInputAndWait(LIFT_HIGHEST_ANGLE, LIFT_HIGHEST_ANGLE, LIFT_LOWEST_ANGLE,
+        LIFT_LOWEST_ANGLE);
     }
 }
 
@@ -414,7 +453,11 @@ void lean(uint8_t aDirection) {
  * Move down and up and back to starting height
  */
 void downAndUp(uint8_t aNumberOfDownAndUps) {
+#if defined(LOCAL_INFO)
+    Serial.println(F("Down and up"));
+#endif
     sCurrentlyRunningAction = ACTION_TYPE_DOWN_UP;
+
     for (uint8_t i = 0; i < aNumberOfDownAndUps; ++i) {
         // Move down and up and back to starting height
         moveLiftServosToNextPositionsAndCheckInputAndWait(LIFT_HIGHEST_ANGLE);

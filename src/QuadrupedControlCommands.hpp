@@ -154,15 +154,22 @@ void doWave() {
 }
 
 /*
- * Center, lean left and right lean all 4 directions and twist a random angle. Ends with a wave.
+ * Dance and wave
+ * 1. Center
+ * 2. Lean left and right
+ * 3. 3 times Lean all 2 directions, twist and lean next 2 directions
+ * 4. Wave
+ * 5. Center
  */
-void doDance() {
+void doDanceAndWave() {
     sCurrentlyRunningCombinedAction = COMBINED_ACTION_TYPE_DANCE;
 #if defined(LOCAL_INFO)
-    Serial.print(F("Dance"));
+    Serial.print(F("Dance+Wave"));
     printQuadrupedServoSpeed();
 #endif
 
+#if defined(LOCAL_INFO)
+#endif
     centerServos();
     QUADRUPED_RETURN_IF_STOP;
     /*
@@ -183,6 +190,9 @@ void doDance() {
         // lean back
         lean(MOVE_DIRECTION_BACKWARD);
         QUADRUPED_RETURN_IF_STOP;
+        /*
+         * Twist
+         */
         twist(60, 1);
         QUADRUPED_RETURN_IF_STOP;
 
@@ -199,7 +209,26 @@ void doDance() {
 }
 
 /**
- * A demo move for tables - 2 1/2 minutes
+ * A demo move for table top / restricted areas - 2 minutes
+ *  UP and Down and Twist.
+ *  Go forward, turn 90 degrees right, then go back sideways.
+ *  Twist.
+ *  Go forward, which was originally the right direction, then turn 90 degrees left, then go back sideways.
+ *  Dance and wave.
+ *
+ * - Speed 140 - medium
+ * - Center
+ * - 2x move down and up and back to starting height
+ * - 2x twist
+ * - 3x creep forward turn and 3x creep back sideways
+ * - Now we are back at start position
+ *
+ * - Center
+ * - 2x twist
+ * - Creep forward turn forward and creep back sideways
+ * - Now we are back at start position
+ *
+ * - Dance and wave.
  */
 void doQuadrupedDemoMove() {
     uint16_t tOriginalSpeed = sQuadrupedServoSpeed;
@@ -209,6 +238,7 @@ void doQuadrupedDemoMove() {
     Serial.print(F("Start demo move sequence"));
 #endif
     setQuadrupedServoSpeed(140);
+
     centerServos();
     // Move down and up and back to starting height
     downAndUp(2);
@@ -237,8 +267,7 @@ void doQuadrupedDemoMove() {
 
     /*
      * Now we are back at start position
-     * center and twist
-     * Creep forward turn forward and creep back sideways
+     * center and twist. Creep forward turn forward and creep back sideways
      */
     centerServos();
     // twist
@@ -261,10 +290,9 @@ void doQuadrupedDemoMove() {
     QUADRUPED_RETURN_IF_STOP;
 
     /*
-     * Now we are back at start position
-     * dance
+     * Now we are back at start position - dance
      */
-    doDance();
+    doDanceAndWave();
 
     sCurrentlyRunningCombinedAction = COMBINED_ACTION_TYPE_STOP;
     // restore speed
@@ -273,15 +301,48 @@ void doQuadrupedDemoMove() {
 
 /*
  * Auto move, needs more space than demo move.
- * It runs only once 40 seconds after boot if no input was detected.
+ * lasts around 3 minutes
+ *
+ * UP and Down and Twist
+ *
+ * - Speed 90 - slow
+ * - Center
+ * - 4x move down and up and back to starting height, 4 times to distinguish it from demo move
+ * - 2x creep forward
+ *
+ * - Speed 260 - fast
+ * - 6x creep forward fast
+ * - 8x creep right fast
+ * - 4x creep left fast
+ * - 2 seconds pause
+ *
+ * - Speed 200 - fast
+ * - Dance
+ * - Turn right
+ * - Center
+ *
+ * - Speed 160 - medium
+ * - 10x trot forward
+ * - 8x  trot backward
+ * - 1 second pause
+ *
+ * - 8x trot right
+ * - 1 second pause
+ *
+ * - Center
+ * - Turn left
+ * - Dance
  */
 void doQuadrupedAutoMove() {
     uint16_t tOriginalSpeed = sQuadrupedServoSpeed;
+    sCurrentlyRunningCombinedAction = COMBINED_ACTION_TYPE_AUTO_MOVE;
 
 #if defined(LOCAL_INFO)
-    Serial.println(F("Start auto move sequence"));
+    Serial.println();
+    Serial.print(F("Start auto move sequence"));
 #endif
-    sCurrentlyRunningCombinedAction = COMBINED_ACTION_TYPE_AUTO_MOVE;
+
+    setQuadrupedServoSpeed(90);
 
     centerServos();
     QUADRUPED_RETURN_IF_STOP;
@@ -309,7 +370,7 @@ void doQuadrupedAutoMove() {
     sMovingDirection = MOVE_DIRECTION_LEFT;
     moveCreep(4);
 #if defined(APPLICATION_DELAY_AND_CHECK_AVAILABLE)
-    delayAndCheckByApplication(2000);
+    delayAndCheckByApplication(1000);
     QUADRUPED_RETURN_IF_STOP;
 #else
     delay(2000); // wait 2 second then start new move
@@ -317,7 +378,7 @@ void doQuadrupedAutoMove() {
 
     // Dance
     setQuadrupedServoSpeed(200);
-    doDance();
+    doDanceAndWave();
     QUADRUPED_RETURN_IF_STOP;
 
     // turn right
@@ -333,11 +394,11 @@ void doQuadrupedAutoMove() {
     moveTrot(10);
     QUADRUPED_RETURN_IF_STOP;
 
-    // trot back
+    // trot backward
     sMovingDirection = MOVE_DIRECTION_BACKWARD;
     moveTrot(8);
 #if defined(APPLICATION_DELAY_AND_CHECK_AVAILABLE)
-    delayAndCheckByApplication(2000);
+    delayAndCheckByApplication(1000);
     QUADRUPED_RETURN_IF_STOP;
 #else
     delay(2000); // wait 2 second then start new move
@@ -360,7 +421,7 @@ void doQuadrupedAutoMove() {
     QUADRUPED_RETURN_IF_STOP;
 
     // dance
-    doDance();
+    doDanceAndWave();
     sCurrentlyRunningCombinedAction = COMBINED_ACTION_TYPE_STOP;
 
     // restore speed

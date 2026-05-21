@@ -137,6 +137,7 @@ void handleAutomaticMovementPattern() {
     Serial.print(F("NeoPatterns current action="));
     Serial.print(sCurrentlyRunningAction);
     Serial.print('|');
+    printCurrentActionString(&Serial);
 #endif
 
     sAtLeastOnePatternsIsActive = true;
@@ -145,9 +146,6 @@ void handleAutomaticMovementPattern() {
     NeoPatterns *tScannerBar = &FrontNeoPixelBar; // let scanner run on virtual front of quadruped
 
     if (sCurrentlyRunningAction == ACTION_TYPE_STOP) {
-#if defined(LOCAL_INFO)
-        Serial.print(F("Stop"));
-#endif
         // Run 4 times rainbow pattern and then stop
         RightNeoPixelBar.RainbowCycle(tDelayFromSpeed / 8, DIRECTION_DOWN, 4);
         LeftNeoPixelBar.RainbowCycle(tDelayFromSpeed / 8, DIRECTION_UP, 4);
@@ -177,9 +175,6 @@ void handleAutomaticMovementPattern() {
         }
         switch (sCurrentlyRunningAction) {
         case ACTION_TYPE_CREEP:
-#if defined(LOCAL_INFO)
-            Serial.print(F("Creep"));
-#endif
             if (!(sMovingDirection & MOVE_DIRECTION_SIDE_MASK)) {
                 // only for forward and backward movement
                 RightNeoPixelBar.ColorWipe(tColorRight, tDelayFromSpeed, 0, sMovingDirection);
@@ -199,23 +194,15 @@ void handleAutomaticMovementPattern() {
             break;
 
         case ACTION_TYPE_TURN:
-#if defined(LOCAL_INFO)
-            Serial.print(F("Turn"));
-#endif
-            QuadrupedNeoPixelBar.Stripes(COLOR32_RED_HALF, 2, COLOR32_GREEN_HALF, 2, 100, tDelayFromSpeed, sMovingDirection);
+            QuadrupedNeoPixelBar.Stripes(COLOR32_RED_HALF, 2, COLOR32_GREEN_HALF, 2, 200, tDelayFromSpeed, sMovingDirection);
             break;
 
+        case ACTION_TYPE_LEAN:
         case ACTION_TYPE_TWIST:
-#if defined(LOCAL_INFO)
-            Serial.print(F("Twist"));
-#endif
             QuadrupedNeoPixelBar.Stripes(COLOR32_RED_HALF, 2, COLOR32_GREEN_HALF, 2, 30, tDelayFromSpeed, sMovingDirection);
             break;
 
         case ACTION_TYPE_TROT:
-#if defined(LOCAL_INFO)
-            Serial.print(F("Trot"));
-#endif
             RightNeoPixelBar.ScannerExtended(tColorRight, 3, tDelayFromSpeed, 0, FLAG_SCANNER_EXT_ROCKET, sMovingDirection);
             LeftNeoPixelBar.ScannerExtended(tColorLeft, 3, tDelayFromSpeed, 0, FLAG_SCANNER_EXT_ROCKET,
                     (sMovingDirection + MOVE_DIRECTION_BACKWARD) & MOVE_DIRECTION_MASK);
@@ -223,26 +210,18 @@ void handleAutomaticMovementPattern() {
 
         case ACTION_TYPE_SHUTDOWN:
         case ACTION_TYPE_DOWN_UP:
-#if defined(LOCAL_INFO)
-            Serial.print(F("Attention / Down and up"));
-#endif
             RightNeoPixelBar.Flash(COLOR32_GREEN_HALF, 200, COLOR32_BLACK, 200, 5);
             FrontNeoPixelBar.Flash(COLOR32_BLUE_HALF, 200, COLOR32_BLACK, 200, 5);
             LeftNeoPixelBar.Flash(COLOR32_RED_HALF, 200, COLOR32_BLACK, 200, 5);
             break;
 
         case ACTION_TYPE_PAUSE:
-#if defined(LOCAL_INFO)
-            Serial.print(F("Pause"));
-#endif
+        case ACTION_TYPE_WAVE:
             QuadrupedNeoPixelBar.Heartbeat(COLOR32_BLUE_QUARTER, tDelayFromSpeed / 2, 2, FLAG_DO_NOT_CLEAR);
             break;
 
         case ACTION_TYPE_TEST:
         case ACTION_TYPE_MELODY:
-#if defined(LOCAL_INFO)
-            Serial.print(F("Melody"));
-#endif
 #if !defined(QUADRUPED_HAS_US_DISTANCE)
             QuadrupedNeoPixelBar.Twinkle(COLOR32_SPECIAL, 6, tDelayFromSpeed / 2, 200); // 6 is aAverageNumberOfActivePixel
 #else
@@ -253,9 +232,6 @@ void handleAutomaticMovementPattern() {
 
         default:
             sAtLeastOnePatternsIsActive = false;
-#if defined(LOCAL_INFO)
-            Serial.print(F("Not yet implemented"));
-#endif
             break;
         }
     }
@@ -268,21 +244,21 @@ void handleAutomaticMovementPattern() {
     }
 #else
     if (tScannerBar != &FrontNeoPixelBar) {
-    // run only for sidewards creeps
-    tScannerBar->ScannerExtended(COLOR32_BLUE_HALF, 2, tDelayFromSpeed, 4,
-    FLAG_SCANNER_EXT_ROCKET | FLAG_SCANNER_EXT_START_AT_BOTH_ENDS);
+        // run only for sidewards creeps
+        tScannerBar->ScannerExtended(COLOR32_BLUE_HALF, 2, tDelayFromSpeed, 3, FLAG_SCANNER_EXT_ROCKET | FLAG_SCANNER_EXT_START_AT_BOTH_ENDS);
     }
 #endif
 
 #if defined(LOCAL_INFO)
     Serial.print(F(" -> Left:"));
-    LeftNeoPixelBar.printPattern(&Serial);
-    Serial.print(F("Front:"));
-    FrontNeoPixelBar.printPattern(&Serial);
-    Serial.print(F("Right:"));
-    RightNeoPixelBar.printPattern(&Serial);
-    Serial.print(F("All:"));
-    QuadrupedNeoPixelBar.printlnPattern(&Serial);
+    LeftNeoPixelBar.printPatternName(&Serial);
+    Serial.print(F(" Front:"));
+    FrontNeoPixelBar.printPatternName(&Serial);
+    Serial.print(F(" Right:"));
+    RightNeoPixelBar.printPatternName(&Serial);
+    Serial.print(F(" All:"));
+    QuadrupedNeoPixelBar.printPatternName(&Serial);
+    Serial.println();
 #endif
 }
 

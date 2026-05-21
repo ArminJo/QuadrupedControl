@@ -62,7 +62,7 @@
  * Demo mode:
  * run doTableMove() every minute
  */
-#define ENABLE_QUADRUPED_DEMO_MODE // Instead of going up and down to remind that the Quadruped can be switched off, run the 2 1/2 minutes demo for a restricted space / table area.
+#define ENABLE_QUADRUPED_DEMO_MODE // Instead of going up and down to remind that the Quadruped can be switched off, run the 2 minutes demo for a restricted space / table area.
 
 #if defined(QUADRUPED_HAS_US_DISTANCE_SERVO)
 #define VCC_STOP_THRESHOLD_MILLIVOLT 3500   // stop moving if below 3.5 volt. Below 3.7 volt, the US distance sensor does not work :-(
@@ -76,7 +76,8 @@ uint8_t sShutdownCount = 0;
 #if defined(QUADRUPED_HAS_US_DISTANCE)
 #define MILLIS_BETWEEN_DISTANCE_MEASUREMENTS    200     // 5 measurements per second
 #define MILLIS_BETWEEN_DISTANCE_MEASUREMENTS_FOR_MELODY 500 // 2 measurements per second to update front bar
-#define MIN_DISTANCE_FOR_MELODY_CM               10     // Play melody triggered by distance below 10 cm.
+#define MIN_DISTANCE_FOR_MELODY_CM                3     // Play melody triggered by distance above 3 and below 5 cm.
+#define MAX_DISTANCE_FOR_MELODY_CM                5     // Play melody triggered by distance above 3 and below 5 cm.
 #define MIN_DISTANCE_FOR_WAVE_CM                 25     // Waves triggered by distance between 25 cm and 35 cm.
 #define MAX_DISTANCE_FOR_WAVE_CM                 35     // Waves triggered by distance between 25 cm and 35 cm.
 #define MAX_DISTANCE_TIMEOUT_CM                 200     // Do not try to measure distances above 200 cm.
@@ -100,7 +101,7 @@ void handleUSDistanceSensor();
 
 #if defined(QUADRUPED_ENABLE_RTTTL)
 #define USE_NO_RTX_EXTENSIONS // Disables RTX format definitions `'s'` (style) and `'l'` (loop). Saves up to 332 bytes program memory
-#define DELAY_COUNT_FOR_MELODY 3 // 2 * MILLIS_BETWEEN_DISTANCE_MEASUREMENTS = 400 ms
+#define DELAY_COUNT_FOR_MELODY 3 // 3 consecutive distances in melody range. 3 * MILLIS_BETWEEN_DISTANCE_MEASUREMENTS = 600 ms
 uint8_t sDelayCounterUntilMelody; // used to disable melody on distance glitches. E.g. avoid playing melody if we measure occasionally once a distance below MIN_DISTANCE_FOR_MELODY_CM
 #include <PlayRtttl.hpp>
 void handleMelody();
@@ -130,12 +131,7 @@ ServoEasing USServo;
 #define MILLIS_OF_INACTIVITY_BETWEEN_AUTO_MOVE             240000   // 4 minutes
 uint32_t sMillisOfLastSpecialAction = 0;                            // millis() of last doAttention() or doWave()
 #endif
-// In demo mode AutoMove is disabled since demo runs earlier
-#if defined(ENABLE_QUADRUPED_DEMO_MODE)
-#define MILLIS_OF_INACTIVITY_BEFORE_REMINDER_MOVE           60000   // 1 minute before demo move
-#else
-#define MILLIS_OF_INACTIVITY_BEFORE_REMINDER_MOVE          120000   // 2 Minutes
-#endif
+#define MILLIS_OF_INACTIVITY_BEFORE_REMINDER_MOVE          120000   // 2 minutes before demo move, which lasts 2 minutes
 
 void checkAndHandleAutoMove();
 void checkAndHandleAttention();
@@ -206,8 +202,8 @@ void loop() {
      * Check if all moving actions have set ACTION_TYPE_STOP after finishing
      */
     if (sCurrentlyRunningAction != ACTION_TYPE_STOP && sCurrentlyRunningAction != ACTION_TYPE_MELODY) {
-        Serial.print(F("Unexpected action type="));
-        Serial.println(sCurrentlyRunningAction);
+        printCurrentActionString(&Serial);
+        Serial.println(F(" is unexpected action type"));
     }
 
 #if defined(QUADRUPED_HAS_US_DISTANCE)
@@ -239,12 +235,12 @@ void loop() {
 
     /*
      * Check for auto move, which runs only once 40 seconds after boot if no input was detected.
-     * Auto move, needs more space than demo move.
+     * Auto move, needs more space than demo move and lasts around 3 minutes.
      */
     checkAndHandleAutoMove();
 
     /*
-     * Run demo or get attention that no IR command was received since 2 minutes and quadruped may be switched off.
+     * Run demo move or get attention that no IR command was received since 2 minutes and quadruped may be switched off.
      * VCC undervoltage is also signaled here.
      */
     checkAndHandleAttention();
@@ -291,6 +287,7 @@ void handleMelody() {
  */
 void handleUSDistanceSensor() {
     static uint8_t sLastBarLength = 0;
+
     if (isShutDownByUndervoltage) {
         return; // no measurement required
     }
@@ -304,15 +301,16 @@ void handleUSDistanceSensor() {
 
     sUSDistanceMeasurmentIsRunning = true;
     uint8_t tDistanceMeasurmentResult = getUSDistanceAsCentimeterWithCentimeterTimeoutPeriodicallyAndPrintIfChanged(
-    MAX_DISTANCE_TIMEOUT_CM, MILLIS_BETWEEN_DISTANCE_MEASUREMENTS, &Serial);
+    MAX_DISTANCE_TIMEOUT_CM, MILLIS_BETWEEN_DISTANCE_MEASUREMENTS, &Serial); // sets sLastUSDistanceMeasurementMillis :-)
     sUSDistanceMeasurmentIsRunning = false;
     if (tDistanceMeasurmentResult != HCSR04_DISTANCE_NO_MEASUREMENT) {
-        // 200 ms are gone
+        // 200 ms (MILLIS_BETWEEN_DISTANCE_MEASUREMENTS) are gone here
 #  if defined(QUADRUPED_HAS_NEOPIXEL)
         /*
          * Show distance bar if no other pattern is active on front bar
          */
-        if (FrontNeoPixelBar.ActivePattern == PATTERN_NONE && QuadrupedNeoPixelBar.ActivePattern == PATTERN_NONE) {
+        if (FrontNeoPixelBar.ActivePattern == PATTERN_NONE && QuadrupedNeoPixelBar.ActivePattern == PATTERN_NONE
+                && sUSDistanceCentimeter != DISTANCE_TIMEOUT_RESULT) {
             /*
              * The first 3 pixel represent a distance of each 5 cm
              * The 4. pixel is active if distance is >= 20 cm and < 30 cm
@@ -350,9 +348,9 @@ void handleUSDistanceSensor() {
              */
 #  if defined(QUADRUPED_ENABLE_RTTTL)
             /*
-             * Play melody if distance is 2 consecutive times below 11 cm and above 3 cm
+             * Play melody if distance is 3 consecutive times below 6 cm and above 3 cm
              */
-            if (sUSDistanceCentimeter > 3 && sUSDistanceCentimeter <= MIN_DISTANCE_FOR_MELODY_CM && !isPlayRtttlRunning()) {
+            if (sUSDistanceCentimeter > MIN_DISTANCE_FOR_MELODY_CM && sUSDistanceCentimeter <= MAX_DISTANCE_FOR_MELODY_CM && !isPlayRtttlRunning()) {
                 sDelayCounterUntilMelody++;
                 if (sDelayCounterUntilMelody >= DELAY_COUNT_FOR_MELODY) {
                     doRandomMelody();
@@ -383,7 +381,7 @@ void handleUSDistanceSensor() {
 
 /*
  * Check for auto move, which runs only once 40 seconds after boot if no input was detected.
- * Auto move, needs more space than demo move.
+ * Auto move, needs more space than demo move and lasts around 3 minutes.
  */
 void checkAndHandleAutoMove() {
     if ((millis() > MILLIS_OF_INACTIVITY_AFTER_BOOT_BEFORE_SWITCH_TO_AUTO_MOVE)
@@ -395,10 +393,7 @@ void checkAndHandleAutoMove() {
 #else
             && sMillisOfLastSpecialAction == 0
 #endif
-            && (!isVCCUSBPowered())) {
-        /*
-         * Only one auto move 40 s after boot was reached and no IR command was received and not powered by USB
-         */
+                    ) {
         doQuadrupedAutoMove(); // Can be terminated by IR command
         resetAttentionTimeout();
     }
@@ -426,7 +421,7 @@ if ((millis() - sMillisOfLastSpecialAction) > MILLIS_OF_INACTIVITY_BEFORE_REMIND
 
         } else {
 #  if defined(ENABLE_QUADRUPED_DEMO_MODE)
-            doQuadrupedDemoMove(); // Can be terminated by IR command
+            doQuadrupedDemoMove(); // 2 minutes. Can be terminated by IR command
 #  else
             doAttention();
 #  endif
