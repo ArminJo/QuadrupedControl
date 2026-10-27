@@ -2,7 +2,6 @@
  * QuadrupedBasicMovements.h
  *
  *  Copyright (C) 2019-2026  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of QuadrupedControl https://github.com/ArminJo/QuadrupedControl.
  *  This file is part of ServoEasing https://github.com/ArminJo/ServoEasing.
@@ -55,16 +54,14 @@ extern volatile uint8_t sMovingDirection;
 #define ACTION_TYPE_MELODY     11
 
 // combined actions
-#define COMBINED_ACTION_TYPE_STOP       0 // no combined action running
-#define COMBINED_ACTION_TYPE_DANCE      1
-#define COMBINED_ACTION_TYPE_AUTO_MOVE  2
-#define COMBINED_ACTION_TYPE_DEMO_MOVE  3
-
-
+#define COMBINED_ACTION_TYPE_STOP           0 // no combined action running
+#define COMBINED_ACTION_TYPE_DANCE          1
+#define COMBINED_ACTION_TYPE_FEATURE_MOVE   2
+#define COMBINED_ACTION_TYPE_DEMO_MOVE      3
 
 extern uint8_t sCurrentlyRunningCombinedAction;
 extern uint8_t sCurrentlyRunningAction; // A change on this action type triggers the generation of new NeoPatterns
-extern uint8_t sLastRunningAction; // do determine changes of sCurrentlyRunningAction
+extern uint8_t sLastRunningAction;      // To determine changes of sCurrentlyRunningAction
 
 #if defined(__AVR__)
 const __FlashStringHelper* getActionString(uint8_t aAction);

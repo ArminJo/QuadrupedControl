@@ -34,7 +34,6 @@
  *  3 Pin mode is difficult since it retriggers itself at distances below 7 cm.
  *
  *  Copyright (C) 2018-2020  Armin Joachimsmeyer
- *  Email: armin.joachimsmeyer@gmail.com
  *
  *  This file is part of Arduino-Utils https://github.com/ArminJo/Arduino-Utils.
  *
@@ -236,14 +235,16 @@ unsigned int getUSDistanceAsCentimeterWithCentimeterTimeout(unsigned int aTimeou
 }
 
 /**
- * @return  HCSR04_DISTANCE_NO_MEASUREMENT, HCSR04_MEASUREMENT_AND_DISTANCE_HAS_CHANGED or HCSR04_MEASUREMENT_AND_DISTANCE_HAS_NOT_CHANGED
+ * @return  HCSR04_DISTANCE_NO_MEASUREMENT if periodically timeout not reached
+ *          HCSR04_MEASUREMENT_AND_DISTANCE_HAS_CHANGED or HCSR04_MEASUREMENT_AND_DISTANCE_HAS_NOT_CHANGED
+ *          if measurement was taken
  */
 uint8_t getUSDistanceAsCentimeterWithCentimeterTimeoutPeriodicallyAndPrintIfChanged(unsigned int aTimeoutCentimeter,
         unsigned int aMillisBetweenMeasurements, Print *aSerial) {
     if ((millis() - sLastUSDistanceMeasurementMillis) >= aMillisBetweenMeasurements) {
         sLastUSDistanceMeasurementMillis = millis();
 
-        getUSDistanceAsCentimeterWithCentimeterTimeout(aTimeoutCentimeter);
+        getUSDistanceAsCentimeterWithCentimeterTimeout(aTimeoutCentimeter); // sets sUSDistanceCentimeter
         unsigned int tDeltaDistance;
         if (sLastUSDistanceCentimeter > sUSDistanceCentimeter) {
             tDeltaDistance = sLastUSDistanceCentimeter - sUSDistanceCentimeter;

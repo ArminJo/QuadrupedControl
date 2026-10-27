@@ -4,7 +4,6 @@
  * This file contains the basic movement functions for creeping, trotting, twisting and turning
  *
  *  Copyright (C) 2019-2026  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of QuadrupedControl https://github.com/ArminJo/QuadrupedControl.
  *  This file is part of ServoEasing https://github.com/ArminJo/ServoEasing.
@@ -46,16 +45,16 @@ const char StringTest[] PROGMEM = "Test";
 const char StringWave[] PROGMEM = "Wave";
 const char StringPause[] PROGMEM = "Pause";
 const char StringMelody[] PROGMEM = "Melody";
-const char *const ActionStrings[] PROGMEM = { StringStop, StringCreep, StringTrot, StringTurn, StringTwist, StringShutdown, StringLean,
-        StringDownUp, StringTest, StringWave, StringPause, StringMelody };
+const char *const ActionStrings[] PROGMEM = { StringStop, StringCreep, StringTrot, StringTurn, StringTwist, StringShutdown,
+        StringLean, StringDownUp, StringTest, StringWave, StringPause, StringMelody };
 
 volatile uint8_t sMovingDirection = MOVE_DIRECTION_FORWARD; // controls the direction of the basic moves
 
 /*
- * Combined actions like dance, auto move and demo move call itself basic actions, which in turn set and reset sCurrentlyRunningAction
+ * Combined actions like dance, feature move and demo move call itself basic actions, which in turn set and reset sCurrentlyRunningAction
  * Therefore we need another variable sCurrentlyRunningCombinedAction to detect this.
  */
-uint8_t sCurrentlyRunningCombinedAction = ACTION_TYPE_STOP; // To suppress melodies or waves during these moves
+uint8_t sCurrentlyRunningCombinedAction = COMBINED_ACTION_TYPE_STOP; // To suppress melodies or waves during these moves
 uint8_t sCurrentlyRunningAction = ACTION_TYPE_STOP; // A change on this action type can be detected e.g. to trigger the generation of new NeoPatterns
 uint8_t sLastRunningAction = ACTION_TYPE_STOP;      // To enable pause / resume
 
@@ -71,7 +70,7 @@ const char* getActionString(uint8_t aAction) {
 #endif
 
 void printCurrentActionString(Print *aSerial) {
-    if (sCurrentlyRunningAction <= sizeof(ActionStrings)) {
+    if (sCurrentlyRunningAction < (sizeof(ActionStrings) / sizeof(ActionStrings[0]))) {
         aSerial->print(getActionString(sCurrentlyRunningAction));
     } else {
         aSerial->print(F("Not yet implemented"));
@@ -101,7 +100,7 @@ void moveTrot(uint8_t aNumberOfTrots) {
 
         tRequestedBodyHeightAngle = sRequestedBodyHeightAngle;
 
-        // and the the other legs
+        // and the other legs
         transformAndSetAllServos(TROT_BASE_ANGLE_FL_BR - TROT_MOVE_ANGLE, TROT_BASE_ANGLE_BL_FR + TROT_MOVE_ANGLE,
         TROT_BASE_ANGLE_FL_BR + TROT_MOVE_ANGLE, TROT_BASE_ANGLE_BL_FR - TROT_MOVE_ANGLE, LiftMaxAngle, tRequestedBodyHeightAngle,
                 LiftMaxAngle, tRequestedBodyHeightAngle, tCurrentDirection);
@@ -180,8 +179,21 @@ void moveTurn(uint8_t aNumberOfBasicTurns) {
     setActionToStop();
 }
 
+// For convenience
+#define DO_LEFT_TURN    true
+#define DO_RIGHT_TURN   false
+void moveTurn(uint8_t aNumberOfBasicTurns, bool aDoLeftTurn) {
+    auto tOriginalMovingDirection = sMovingDirection;
+    if (aDoLeftTurn) {
+        sMovingDirection = MOVE_DIRECTION_LEFT;
+    } else {
+        sMovingDirection = MOVE_DIRECTION_RIGHT;
+    }
+    moveTurn(aNumberOfBasicTurns);
+    sMovingDirection = tOriginalMovingDirection;
+}
 /*
- * One basicTurn() call turns the body by approximately 12 degree => 30 basicTurns per 360 degree
+ * One basicTurn() call turns the body by approximately 14 degree => 26 basicTurns per 360 degree
  * The aLiftLegIndex is lifted up and moved by 120 degree in body turn direction
  * All other legs are moved by 40 degree against the body turn direction
  *
@@ -231,7 +243,7 @@ void basicTurn(uint8_t aLiftLegIndex, bool aTurnLeft) {
 }
 
 /*
- * Y position with right legs closed and left legs open
+ * Y position with right legs closed (160, 20 degree) and left legs open (110, 70 degree)
  */
 void goToYPosition(uint8_t aDirection) {
 #if defined(LOCAL_INFO)
@@ -282,9 +294,9 @@ void basicHalfCreep(uint8_t aDirection, bool doMirror) {
 // 1. Move front right leg up, forward and down
     Serial.println(F("1. move front leg"));
 #endif
-#if defined(QUADRUPED_HAS_US_DISTANCE_SERVO)
+#if defined(QUADRUPED_HAS_US_DISTANCE_SENSOR_SERVO)
     if (aDirection ==  MOVE_DIRECTION_FORWARD) {
-        // only for movement forward
+        // Move servo to the side, where the leg moves forward. Only implemented for movement forward.
         if(doMirror) {
             ServoEasing::ServoEasingNextPositionArray[INDEX_OF_US_DISTANCE_SERVO] = 45;
         } else {
@@ -310,7 +322,7 @@ void basicHalfCreep(uint8_t aDirection, bool doMirror) {
     setPivotServosSpeed(sQuadrupedServoSpeed);
     QUADRUPED_RETURN_IF_STOP;
 
-// 3. Move back right leg up, forward and down
+// 3. Move back left leg up, forward and down
 #if defined(LOCAL_INFO)
     Serial.println(F("3. move back leg to Y position"));
 #endif
@@ -446,6 +458,7 @@ void lean(uint8_t aDirection) {
         moveLiftServosToNextPositionsAndCheckInputAndWait(LIFT_HIGHEST_ANGLE, LIFT_HIGHEST_ANGLE, LIFT_LOWEST_ANGLE,
         LIFT_LOWEST_ANGLE);
     }
+    setActionToStop();
 }
 
 /*

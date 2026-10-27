@@ -1,5 +1,5 @@
 #######################################
-# Syntax Coloring Map for ServoEasing
+# Syntax Coloring Map for QuadrupedControl
 #######################################
 
 #######################################
@@ -9,22 +9,17 @@
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
-doCreepForward	KEYWORD2
-doCreepBack	KEYWORD2
+doCreep	KEYWORD2
 doTrot	KEYWORD2
-doTurnLeft	KEYWORD2
-doTurnRight	KEYWORD2
+doTurn	KEYWORD2
 doTwist	KEYWORD2
-doBow	KEYWORD2
-doDance	KEYWORD2
+doDanceAndWave	KEYWORD2
 doWave	KEYWORD2
 doTest	KEYWORD2
-doAutoMove	KEYWORD2
+doQuadrupedDemoMoves	KEYWORD2
 doAttention	KEYWORD2
-doLeanLeft	KEYWORD2
-doLeanRight	KEYWORD2
-doLeanBack	KEYWORD2
-doLeanFront	KEYWORD2
+doQuadrupedFeatureMove	KEYWORD2
+doQuadrupedLongDemoMove	KEYWORD2
 doCenterServos	KEYWORD2
 doCalibration	KEYWORD2
 doStop	KEYWORD2

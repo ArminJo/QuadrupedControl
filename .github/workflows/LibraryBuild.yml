@@ -49,14 +49,24 @@ jobs:
         #############################################################################################################
         arduino-boards-fqbn:
           - arduino:avr:uno
-          - arduino:avr:uno|AllFeatures
+          - arduino:avr:uno|Quadruped1 # Enables all features
+          - arduino:avr:uno|CVDRemote
+          - arduino:avr:uno|RTTL
 
         # Specify parameters for each board.
         #############################################################################################################
         include:
-          - arduino-boards-fqbn: arduino:avr:uno|AllFeatures
+          - arduino-boards-fqbn: arduino:avr:uno|Quadruped1
             build-properties:
               QuadrupedControl: -DQUADRUPED_1_WITH_DVD_REMOTE -mrelax
+
+          - arduino-boards-fqbn: arduino:avr:uno|DVDRemote
+            build-properties:
+              QuadrupedControl: -DUSE_WHITE_DVD_REMOTE -mrelax
+
+          - arduino-boards-fqbn: arduino:avr:uno|RTTL
+            build-properties:
+              QuadrupedControl: -DQUADRUPED_ENABLE_RTTTL -mrelax
 
       # Do not cancel all jobs / architectures if one job fails
       fail-fast: false

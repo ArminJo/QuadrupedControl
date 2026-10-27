@@ -12,7 +12,6 @@
  * which is evaluated in handleQuadrupedNeoPixelUpdate() in ISR context.
  *
  *  Copyright (C) 2019-2026  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of QuadrupedControl https://github.com/ArminJo/QuadrupedControl.
  *  This file is part of ServoEasing https://github.com/ArminJo/ServoEasing.
@@ -76,7 +75,7 @@ DISABLE_CALLING_SHOW_OF_PARENT, &QuadrupedOnPatternCompleteHandler, SHOW_ONLY_AT
 
 // The color background for front distance bar
 color32_t sBarBackgroundColorArrayForDistance[PIXELS_ON_ONE_BAR] = { COLOR32_RED_QUARTER, COLOR32_RED_QUARTER, COLOR32_RED_QUARTER,
-COLOR32_YELLOW, COLOR32_YELLOW, COLOR32_GREEN_QUARTER, COLOR32_GREEN_QUARTER, COLOR32_GREEN_QUARTER };
+COLOR32_YELLOW, COLOR32_YELLOW, COLOR32_YELLOW, COLOR32_YELLOW, COLOR32_GREEN_QUARTER };
 
 /*
  * @brief This function checks all patterns for update and calls show() of the parent 24 pixel bar if required.
@@ -93,7 +92,7 @@ void handleQuadrupedNeoPixelUpdate() {
          * Update patterns if active, do not call child patterns if parent pattern for 24 pixel is active
          */
         if (sAtLeastOnePatternsIsActive
-#if defined(QUADRUPED_HAS_US_DISTANCE)
+#if defined(QUADRUPED_HAS_US_DISTANCE_SENSOR)
                 && !sUSDistanceMeasurmentIsRunning
 #endif
         ) {
@@ -146,10 +145,12 @@ void handleAutomaticMovementPattern() {
     NeoPatterns *tScannerBar = &FrontNeoPixelBar; // let scanner run on virtual front of quadruped
 
     if (sCurrentlyRunningAction == ACTION_TYPE_STOP) {
-        // Run 4 times rainbow pattern and then stop
-        RightNeoPixelBar.RainbowCycle(tDelayFromSpeed / 8, DIRECTION_DOWN, 4);
-        LeftNeoPixelBar.RainbowCycle(tDelayFromSpeed / 8, DIRECTION_UP, 4);
-
+        // Run rainbow pattern
+        RightNeoPixelBar.RainbowCycle(tDelayFromSpeed / 8, DIRECTION_DOWN, 100);
+        LeftNeoPixelBar.RainbowCycle(tDelayFromSpeed / 8, DIRECTION_UP, 100);
+#if defined(QUADRUPED_HAS_US_DISTANCE_SENSOR)
+        sLastBarLength = 0; // Force display of distance
+#endif
     } else {
         /*
          * First stop all running patterns
@@ -182,12 +183,12 @@ void handleAutomaticMovementPattern() {
                         (sMovingDirection + MOVE_DIRECTION_BACKWARD) & MOVE_DIRECTION_MASK);
             } else if (sMovingDirection == MOVE_DIRECTION_LEFT) {
                 tScannerBar = &LeftNeoPixelBar; // let scanner be at virtual front of quadruped
-#if !defined(QUADRUPED_HAS_US_DISTANCE)
+#if !defined(QUADRUPED_HAS_US_DISTANCE_SENSOR)
                 FrontNeoPixelBar.clear(); // clear old front pattern
 #endif
             } else if (sMovingDirection == MOVE_DIRECTION_RIGHT) {
                 tScannerBar = &RightNeoPixelBar;
-#if !defined(QUADRUPED_HAS_US_DISTANCE)
+#if !defined(QUADRUPED_HAS_US_DISTANCE_SENSOR)
                 FrontNeoPixelBar.clear(); // clear old front pattern
 #endif
             }
@@ -222,7 +223,7 @@ void handleAutomaticMovementPattern() {
 
         case ACTION_TYPE_TEST:
         case ACTION_TYPE_MELODY:
-#if !defined(QUADRUPED_HAS_US_DISTANCE)
+#if !defined(QUADRUPED_HAS_US_DISTANCE_SENSOR)
             QuadrupedNeoPixelBar.Twinkle(COLOR32_SPECIAL, 6, tDelayFromSpeed / 2, 200); // 6 is aAverageNumberOfActivePixel
 #else
             RightNeoPixelBar.Twinkle(COLOR32_SPECIAL, 2, tDelayFromSpeed / 2, 200); // 2 is aAverageNumberOfActivePixel
@@ -235,7 +236,7 @@ void handleAutomaticMovementPattern() {
             break;
         }
     }
-#if !defined(QUADRUPED_HAS_US_DISTANCE)
+#if !defined(QUADRUPED_HAS_US_DISTANCE_SENSOR)
     if (QuadrupedNeoPixelBar.ActivePattern == PATTERN_NONE && tScannerBar->ActivePattern == PATTERN_NONE
             && sMovingDirection != MOVE_DIRECTION_BACKWARD) {
         // No scanner for backward movement
@@ -270,7 +271,7 @@ void QuadrupedOnPatternCompleteHandler(NeoPatterns *aLedsPtr) {
     Serial.print(F("Offset="));
     Serial.print(aLedsPtr->PixelOffset);
     Serial.print(F(" Pattern \""));
-    aLedsPtr->printPatternName(aLedsPtr->ActivePattern, &Serial);
+    aLedsPtr->printPatternName(&Serial, aLedsPtr->ActivePattern);
     Serial.println(F("\" finished"));
 #endif
     // Reset ActivePattern if no new one will be started.
